@@ -49,3 +49,13 @@
 - **Goal:** Provide Merchant Category Code (MCC) lookup and risk policy tagging for onboarding intake workflows.
 - **Action:** Created `src/modules/mcc` (`MccService`, `MccController`, `MccModule`) featuring catalog search and risk tag evaluation.
 - **My Refinement & Verification:** Verified search filter execution for code/description/category and confirmed clean compilation (`npm run build`).
+
+---
+
+### Step 6: Application Lifecycle Management
+- **Goal:** Expose RESTful endpoints for application creation, state retrieval (Save & Resume), and optimistic profile patches.
+- **Prompts Used:** `"Implement ApplicationModule with endpoints for POST /applications, GET /applications/:id, PATCH /applications/:id/applicant, and PATCH /applications/:id/business."`
+- **Actions & Verification:**
+  - Constructed `ApplicationService` and `ApplicationController` under `src/modules/application`.
+  - Wired all modules together into `AppModule`.
+  - Conducted final full build verification (`npm run build`).
