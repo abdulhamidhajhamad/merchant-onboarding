@@ -1,0 +1,50 @@
+service: merchant-onboarding
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${AWS_REGION:us-east-1}
+  stage: local
+  apiGateway:
+    minimumCompressionSize: 1024
+    shouldStartNameStageMatching: false
+
+environment:
+  PORT: 3000
+  AWS_REGION: ${AWS_REGION}
+  DYNAMODB_ENDPOINT: ${DYNAMODB_ENDPOINT}
+  S3_ENDPOINT: ${S3_ENDPOINT}
+
+functions:
+  app:
+    handler: src/lambda.handler
+    events:
+      - http: 
+          path: /
+          method: get
+          cors: true
+      - http:
+          path: /health
+          method: get
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: any
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+  - serverless-s3-local
+
+custom:
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+  s3:
+    local:
+      port: 9000
+      accessKeyId: mock
+      secretAccessKey: mock
