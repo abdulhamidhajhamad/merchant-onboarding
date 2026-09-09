@@ -5,7 +5,7 @@ import { DatabaseModule } from './modules/database/database.module';
 import { DocumentModule } from './modules/document/document.module';
 import { MccModule } from './modules/mcc/mcc.module';
 import { ApplicationModule } from './modules/application/application.module'; 
-
+import { EvaluationModule } from './modules/evaluation/evaluation.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -13,7 +13,8 @@ import { ApplicationModule } from './modules/application/application.module';
     DatabaseModule,
     DocumentModule,
     MccModule,
-    ApplicationModule, 
+    ApplicationModule,
+    EvaluationModule, 
   ],
 })
 export class AppModule {}

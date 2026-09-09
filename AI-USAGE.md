@@ -89,3 +89,14 @@
   - Updated `ApplicationItem` interface in `application.repository.ts` to include optional properties (`mcc`, `documents`) for strict type safety.
   - Resolved dynamic property access errors in `ApplicationService`.
   - Re-compiled project successfully (`npm run build`) with 0 errors.
+
+  ---
+
+### Step 9: AI-Assisted Evaluation & Risk Classification Module
+- **Goal:** Implement AI classification for MCC suggestions and statement evaluation with strict separation between deterministic financial metrics and explainable risk signals.
+- **Prompts Used:** `"Create EvaluationModule providing POST /applications/classify for MCC matching and POST /applications/evaluate for statement analysis with deterministic effective rate calculations."`
+- **Actions & Verification:**
+  - Implemented `EvaluationService` providing MCC proposal logic (`classifyBusiness`) and statement analysis (`evaluateStatement`).
+  - Added `POST /applications/classify` and `POST /applications/evaluate` controllers with complete Swagger metadata.
+  - Separated deterministic calculation (effective processing rate) from explainable AI risk signals (`HIGH_CNP_RATIO`).
+  - Integrated `EvaluationModule` into `AppModule` and verified clean build (`npm run build`).
