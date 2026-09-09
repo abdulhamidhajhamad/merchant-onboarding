@@ -156,3 +156,8 @@ DerivedData
 
 # Editor config
 .editorconfig
+
+node_modules
+.build
+.serverless
+dist

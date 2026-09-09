@@ -17,13 +17,18 @@
   - Strict zero-Docker requirement applied, switching to native serverless offline plugins.
   - Verified local setup by starting `serverless offline` and hitting `GET /health`.
 
-### Step 2: Data Models & Zod Schemas
-- **Goal:** Define strict Zod validation schemas for Applicant, Business, Document, and MCC models.
-- **Prompt Provided:**
-  > "Implement Data Models and Zod Schemas for the merchant onboarding layer in src/common/schemas... Create applicant, business, document, and mcc schemas with strict enums and types."
-- **My Adjustments & Verification:**
-  - Reviewed generated Zod schemas to ensure sensitive fields use masked identifiers and proper document lifecycles are enforced.
-  - Verified type exports using `tsc --noEmit`.
 
 ---
+### Step 1.1: Refactoring to Enterprise NestJS Architecture
+- **Goal:** Restructure `src/` directory to move health checks into a dedicated `src/modules/health` module and keep the root clean.
+- **Action:** Created isolated refactor branch via OpenCode, committed modular layout changes, merged into `main`, and pushed.
+- **Verification:** Clean build compilation (`npm run build`) and verified project tree structure.
+
+### Step 2: Strict Zod Domain Schemas & Contracts
+- **Goal:** Establish strict runtime input validation and TypeScript types for Applicant, Business, Document lifecycles, and MCC entities under `src/common/schemas`.
+- **Action:** Generated modular Zod schemas using Gemini 3.8 architecture prompts and OpenCode agent.
+- **My Refinement & Verification:** Verified `z.infer` type exports, masked ID metadata fields, document status lifecycle transitions, and verified clean TypeScript compilation (`npm run build`).
+---
+
+
 
