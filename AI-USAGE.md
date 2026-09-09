@@ -28,10 +28,17 @@
 - **Goal:** Establish strict runtime input validation and TypeScript types for Applicant, Business, Document lifecycles, and MCC entities under `src/common/schemas`.
 - **Action:** Generated modular Zod schemas using Gemini 3.8 architecture prompts and OpenCode agent.
 - **My Refinement & Verification:** Verified `z.infer` type exports, masked ID metadata fields, document status lifecycle transitions, and verified clean TypeScript compilation (`npm run build`).
----
 
+---
 
 ### Step 3: DynamoDB Repository Layer & Optimistic Concurrency
 - **Goal:** Implement data access layer for applications using AWS SDK v3 with state preservation and optimistic concurrency control.
 - **Action:** Created `src/modules/database` containing `DynamoService`, `ApplicationRepository`, and `DatabaseModule`.
 - **My Refinement & Verification:** Verified `ConditionExpression` logic for version incrementing (`version = :currentVersion`), failure handling mapped to NestJS `ConflictException`, and confirmed clean compilation (`npm run build`).
+
+---
+
+### Step 4: Direct-to-S3 Presigned Uploads & Document Lifecycle
+- **Goal:** Implement direct document upload workflow via S3 Presigned URLs and manage document lifecycle metadata.
+- **Action:** Created `src/modules/document` (`S3Service`, `DocumentService`, `DocumentController`, `DocumentModule`).
+- **My Refinement & Verification:** Mapped `lifecycleStatus` types from Zod schemas, set up S3 local fallback parameters, and confirmed successful TypeScript compilation (`npm run build`).
