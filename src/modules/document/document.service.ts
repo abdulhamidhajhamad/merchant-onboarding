@@ -46,4 +46,14 @@ export class DocumentService {
       documentMetadata,
     };
   }
+
+  async completeUpload(applicationId: string, documentId: string, checksum: string) {
+    return {
+      applicationId,
+      documentId,
+      checksum,
+      lifecycleStatus: 'RECEIVED',
+      uploadedAt: new Date().toISOString(),
+    };
+  }
 }

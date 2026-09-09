@@ -1,7 +1,7 @@
 import { Controller, Post, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { DocumentService } from './document.service';
 import { DocumentType } from '../../common/schemas';
-
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger'; 
 class PresignedUrlDto {
   documentType: DocumentType;
   mimeType: string;
@@ -22,5 +22,17 @@ export class DocumentController {
       dto.documentType,
       dto.mimeType,
     );
+  }
+
+  @Post(':documentId/complete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Confirm document upload completion and checksum' })
+  @ApiResponse({ status: 200, description: 'Document status updated to RECEIVED' })
+  async completeUpload(
+    @Param('id') applicationId: string,
+    @Param('documentId') documentId: string,
+    @Body('checksum') checksum: string,
+  ) {
+    return this.documentService.completeUpload(applicationId, documentId, checksum);
   }
 }

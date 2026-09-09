@@ -70,3 +70,22 @@
   - Registered the interceptor globally in `src/main.ts`.
   - Configured `timeout: 35` bound in `serverless.yml`.
   - Verified clean TypeScript compilation (`npm run build`).
+
+  ---
+
+### Step 8: Document Completion & Application Submission Lifecycle
+- **Goal:** Complete document lifecycle transitions (upload confirmation) and provide a locked, validated application submission producing a normalized review payload.
+- **Prompts Used:** `"Implement POST /applications/:id/documents/:docId/complete and POST /applications/:id/submit with required field validation, OCC version locking, and normalized payload generation."`
+- **Actions & Verification:**
+  - Added `completeUpload` method to `DocumentService` and exposed `POST /applications/:id/documents/:docId/complete` endpoint with Swagger documentation.
+  - Added `submitApplication` method to `ApplicationService` to validate completeness (applicant and business details), lock state to `SUBMITTED`, and yield normalized underwriting payload[cite: 1].
+
+  ---
+
+### Step 8.1: Manual Bug Fixes & Type Definitions Refactoring
+- **Goal:** Resolve TypeScript compilation errors occurring during `npm run build` after adding new submission endpoints.
+- **Actions Taken Manually:**
+  - Fixed missing Swagger decorator imports (`ApiOperation`, `ApiResponse`) in `DocumentController`.
+  - Updated `ApplicationItem` interface in `application.repository.ts` to include optional properties (`mcc`, `documents`) for strict type safety.
+  - Resolved dynamic property access errors in `ApplicationService`.
+  - Re-compiled project successfully (`npm run build`) with 0 errors.

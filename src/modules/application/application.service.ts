@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { ApplicationRepository } from '../database/application.repository';
 import { CreateApplicantDto, CreateBusinessDto } from './dto/application.dto';
@@ -28,5 +28,31 @@ export class ApplicationService {
   async updateBusiness(id: string, businessData: CreateBusinessDto, currentVersion: number) {
     await this.getApplication(id);
     return this.applicationRepository.updateBusiness(id, businessData, currentVersion);
+  }
+
+  async submitApplication(id: string) {
+    const application = await this.getApplication(id);
+
+    if (!application.applicant) {
+      throw new BadRequestException('Applicant profile is missing or incomplete.');
+    }
+
+    if (!application.business) {
+      throw new BadRequestException('Business profile is missing or incomplete.');
+    }
+
+    return {
+      status: 'SUBMITTED',
+      applicationId: id,
+      submittedAt: new Date().toISOString(),
+      normalizedPayload: {
+        applicationId: id,
+        applicant: application.applicant,
+        business: application.business,
+        mcc: application.mcc || null,
+        documents: application.documents || [],
+        reviewStatus: 'READY_FOR_UNDERWRITING',
+      },
+    };
   }
 }

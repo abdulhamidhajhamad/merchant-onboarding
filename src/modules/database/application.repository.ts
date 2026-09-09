@@ -12,13 +12,17 @@ import { DynamoService } from './dynamo.service';
 export type ApplicationStatus = 'DRAFT' | string;
 
 export interface ApplicationItem {
+  pk: string;
+  sk: string;
   id: string;
-  status: ApplicationStatus;
+  status: string;
   version: number;
-  created_at: string;
-  updated_at: string;
-  applicant?: Applicant;
-  business?: Business;
+  applicant?: Record<string, any>;
+  business?: Record<string, any>;
+  mcc?: Record<string, any>; 
+  documents?: Record<string, any>[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ConditionalCheckError {
@@ -43,8 +47,10 @@ export class ApplicationRepository {
       id,
       status: 'DRAFT',
       version: 1,
-      created_at: now,
-      updated_at: now,
+      pk: id,
+      sk: 'application',
+      createdAt: now,
+      updatedAt: now,
     };
 
     try {
