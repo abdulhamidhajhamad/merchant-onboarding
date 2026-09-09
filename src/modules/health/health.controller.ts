@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 
-@Injectable()
-export class AppService {
+@Controller()
+export class HealthController {
+  @Get('/health')
   getHealthCheck() {
     return {
       status: 'OK',

@@ -1,30 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { ServerlessExpressMiddleware } from '@codegenie/serverless-express';
+import serverlessExpress from '@codegenie/serverless-express';
+import { Handler } from 'aws-lambda';
 import { AppModule } from './app.module';
 
-let serverlessExpressMiddleware: ServerlessExpressMiddleware;
+let cachedHandler: Handler;
 
-export const handler = async (event: any, context: any) => {
-  if (!serverlessExpressMiddleware) {
-    const app = await NestFactory.create(AppModule, {
-      httpAdapter: new ExpressAdapter(),
-    });
-    const expressApp = app.getHttpAdapter().getInstance();
-    serverlessExpressMiddleware = new ServerlessExpressMiddleware(
-      'merchant-onboarding',
-      expressApp,
-      false,
-    );
+const bootstrapServer = async (): Promise<Handler> => {
+  const app = await NestFactory.create(AppModule, new ExpressAdapter());
+  await app.init();
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverlessExpress({ app: expressApp });
+};
+
+export const handler: Handler = async (event, context, callback) => {
+  if (!cachedHandler) {
+    cachedHandler = await bootstrapServer();
   }
 
-  return new Promise((resolve, reject) => {
-    serverlessExpressMiddleware.event(event, context, (err: any, data: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
+  return cachedHandler(event, context, callback);
 };
