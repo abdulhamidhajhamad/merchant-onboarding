@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1128.0",
+    "@aws-sdk/client-s3": "^3.1128.0",
     "@aws-sdk/lib-dynamodb": "^3.1128.0",
+    "@aws-sdk/s3-request-presigner": "^3.1128.0",
     "@codegenie/serverless-express": "^4.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
@@ -34,6 +36,7 @@
     "joi": "^17.9.2",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "uuid": "^14.0.2",
     "zod": "^4.5.4"
   },
   "devDependencies": {
@@ -45,6 +48,7 @@
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",
     "@types/supertest": "^2.0.12",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^8.42.0",
