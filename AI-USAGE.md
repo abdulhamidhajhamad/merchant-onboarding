@@ -59,3 +59,14 @@
   - Constructed `ApplicationService` and `ApplicationController` under `src/modules/application`.
   - Wired all modules together into `AppModule`.
   - Conducted final full build verification (`npm run build`).
+
+  ---
+
+### Step 7: 45-Second Reliability & Timeout Safeguards
+- **Goal:** Enforce hard 45-second execution limits and protect Lambda execution from downstream hanging dependencies.
+- **Prompts Used:** `"Implement a global NestJS Interceptor that cuts requests at 35 seconds with a 504 Request Timeout, and configure serverless.yml execution timeout bounds."`
+- **Actions & Verification:**
+  - Implemented `TimeoutInterceptor` using RxJS `timeout` operator under `src/common/interceptors`.
+  - Registered the interceptor globally in `src/main.ts`.
+  - Configured `timeout: 35` bound in `serverless.yml`.
+  - Verified clean TypeScript compilation (`npm run build`).

@@ -3,6 +3,7 @@ service: merchant-onboarding
 provider:
   name: aws
   runtime: nodejs20.x
+  timeout: 35
   region: ${AWS_REGION:us-east-1}
   stage: local
   apiGateway:
