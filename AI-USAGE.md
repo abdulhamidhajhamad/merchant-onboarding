@@ -42,3 +42,10 @@
 - **Goal:** Implement direct document upload workflow via S3 Presigned URLs and manage document lifecycle metadata.
 - **Action:** Created `src/modules/document` (`S3Service`, `DocumentService`, `DocumentController`, `DocumentModule`).
 - **My Refinement & Verification:** Mapped `lifecycleStatus` types from Zod schemas, set up S3 local fallback parameters, and confirmed successful TypeScript compilation (`npm run build`).
+
+---
+
+### Step 5: MCC Catalog & Risk Classification Service
+- **Goal:** Provide Merchant Category Code (MCC) lookup and risk policy tagging for onboarding intake workflows.
+- **Action:** Created `src/modules/mcc` (`MccService`, `MccController`, `MccModule`) featuring catalog search and risk tag evaluation.
+- **My Refinement & Verification:** Verified search filter execution for code/description/category and confirmed clean compilation (`npm run build`).
