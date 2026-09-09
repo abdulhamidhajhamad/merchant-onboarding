@@ -31,4 +31,7 @@
 ---
 
 
-
+### Step 3: DynamoDB Repository Layer & Optimistic Concurrency
+- **Goal:** Implement data access layer for applications using AWS SDK v3 with state preservation and optimistic concurrency control.
+- **Action:** Created `src/modules/database` containing `DynamoService`, `ApplicationRepository`, and `DatabaseModule`.
+- **My Refinement & Verification:** Verified `ConditionExpression` logic for version incrementing (`version = :currentVersion`), failure handling mapped to NestJS `ConflictException`, and confirmed clean compilation (`npm run build`).

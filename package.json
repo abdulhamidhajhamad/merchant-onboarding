@@ -21,6 +21,8 @@
     "sls:offline": "serverless offline start --reloadAll --stage local"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1128.0",
+    "@aws-sdk/lib-dynamodb": "^3.1128.0",
     "@codegenie/serverless-express": "^4.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
