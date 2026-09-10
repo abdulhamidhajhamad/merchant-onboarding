@@ -112,6 +112,13 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       },
     } as const;
 
+    // مستندات تجريبية مطابقة لشروط الـ submission الحتمية
+    const mockDocuments = [
+      { id: 'doc-1', type: 'GOVERNMENT_ID', lifecycleStatus: 'ACCEPTED' },
+      { id: 'doc-2', type: 'BUSINESS_REGISTRATION', lifecycleStatus: 'RECEIVED' },
+      { id: 'doc-3', type: 'BANK_EVIDENCE', lifecycleStatus: 'RECEIVED' },
+    ];
+
     jest.spyOn(applicationRepo, 'create').mockImplementation(async (data: any): Promise<any> => ({
       pk: `APP#${data.id || 'test-id'}`,
       sk: 'METADATA',
@@ -120,6 +127,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       version: 1,
       applicant: data.applicant ?? validApplicant,
       business: data.business ?? validBusiness,
+      documents: mockDocuments,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
@@ -132,6 +140,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       version: 1,
       applicant: validApplicant,
       business: validBusiness,
+      documents: mockDocuments,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
@@ -170,9 +179,9 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
   });
 
   describe('2. AI Evaluation & Risk Classification', () => {
-    it('POST /applications/classify - should return proposed MCC and confidence score', async () => {
+    it('POST /applications/:id/classify - should return proposed MCC and confidence score', async () => {
       const response = await request(app.getHttpServer())
-        .post('/applications/classify')
+        .post('/applications/test-id/classify')
         .send({ description: 'Italian restaurant serving pizza and pasta' })
         .expect(200);
 
@@ -180,9 +189,9 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       expect(response.body).toHaveProperty('confidenceScore');
     });
 
-    it('POST /applications/evaluate - should calculate deterministic effective rate', async () => {
+    it('POST /applications/:id/evaluate - should calculate deterministic effective rate', async () => {
       const response = await request(app.getHttpServer())
-        .post('/applications/evaluate')
+        .post('/applications/test-id/evaluate')
         .send({ monthlyVolume: 100000, totalFees: 2500 })
         .expect(200);
 
@@ -196,7 +205,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       const response = await request(app.getHttpServer())
         .post('/applications')
         .send({
-          applicant: { name: 'John Doe', email: 'john@example.com' },
+          applicant: { firstName: 'John', lastName: 'Doe', email: 'john@example.com' },
           business: { legalName: 'Acme LLC', taxId: '12-3456789' },
         });
 

@@ -266,3 +266,15 @@
 - **My Refinement & Verification:**
   - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
   - Executed full end-to-end integration test suite (`npm run test:e2e`) confirming 100% pass rates across all verification suites.
+
+  ---
+
+### Step 21: Mandatory Document Verification Safeguards in Application Submission
+- **Goal:** Enforce strict compliance with the core acceptance criterion *"Submission blocks when required items are missing"* by validating the lifecycle status of mandatory documents prior to locking application submissions.
+- **Prompts & Strategy:**
+  - Audited `submitApplication` within `ApplicationService` to identify compliance gaps regarding document verification.
+  - Implemented an automated validation loop that checks for mandatory document types (`GOVERNMENT_ID`, `BUSINESS_REGISTRATION`, `BANK_EVIDENCE`) within the application state.
+  - Enforced a strict guard ensuring that all required documents exist and are in a valid terminal lifecycle state (`RECEIVED` or `ACCEPTED`), throwing a detailed `BadRequestException` otherwise.
+- **My Refinement & Verification:**
+  - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
+  - Executed full end-to-end integration test suite (`npm run test:e2e`) confirming 100% pass rates across submission verification pathways.

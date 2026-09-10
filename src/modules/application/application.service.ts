@@ -71,8 +71,12 @@ export class ApplicationService {
     return this.applicationRepository.updateBusiness(id, parsed.data);
   }
 
-async submitApplication(id: string) {
+  async submitApplication(id: string) {
     const application = await this.getApplication(id);
+
+    if (application.status === 'SUBMITTED') {
+      throw new ConflictException('Application is already submitted and locked');
+    }
 
     const applicantValidation = applicantSchema.safeParse(application.applicant ?? null);
     if (!applicantValidation.success) {
@@ -96,8 +100,19 @@ async submitApplication(id: string) {
       });
     }
 
-    if (application.status === 'SUBMITTED') {
-      throw new ConflictException('Application is already submitted and locked');
+    const documents = application.documents || [];
+    const requiredDocumentTypes = ['GOVERNMENT_ID', 'BUSINESS_REGISTRATION', 'BANK_EVIDENCE'];
+
+    for (const reqType of requiredDocumentTypes) {
+      const doc = documents.find((d: any) => d.type === reqType);
+      
+      if (!doc || !['RECEIVED', 'ACCEPTED'].includes(doc.lifecycleStatus)) {
+        throw new BadRequestException({
+          message: `Submission blocked: Required document '${reqType}' is missing or not in a valid state.`,
+          documentType: reqType,
+          currentStatus: doc ? doc.lifecycleStatus : 'MISSING',
+        });
+      }
     }
 
     const submittedAt = new Date().toISOString();
@@ -106,7 +121,7 @@ async submitApplication(id: string) {
       applicant: applicantValidation.data,
       business: businessValidation.data,
       mcc: application.mcc || null,
-      documents: application.documents || [],
+      documents: documents,
       reviewStatus: 'READY_FOR_UNDERWRITING',
       submittedAt,
     };
