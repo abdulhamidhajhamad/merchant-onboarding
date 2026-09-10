@@ -1,9 +1,7 @@
 # AI Usage Report
 
 ## Tools & Setup
-- **Gemini 3.8:** Used for architectural design, requirement breakdown, and prompt engineering.
-- **OpenCode Agent:** Used for local workspace code generation and file execution.
-
+- **Collaborative Workflow:** Every feature and development phase followed a strict iterative lifecycle: we formulated the architectural plan and design strategy together through prompt discussions, and once the plan was fully approved, the implementation, terminal executions, file creations, and testing cycles were driven through OpenCode Agent. 
 ---
 
 ## Workflow & Prompt Log
