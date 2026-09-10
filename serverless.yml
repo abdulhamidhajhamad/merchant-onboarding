@@ -5,10 +5,26 @@ provider:
   runtime: nodejs20.x
   timeout: 35
   region: ${AWS_REGION:us-east-1}
-  stage: local
+  stage: ${opt:stage, 'local'}
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameStageMatching: false
+    https: true 
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/*"
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+            - s3:PutObject
+          Resource: "arn:aws:s3:::merchant-documents-*/*"
 
 environment:
   PORT: 3000
@@ -49,3 +65,24 @@ custom:
       port: 9000
       accessKeyId: mock
       secretAccessKey: mock
+
+resources:
+  Resources:
+    MerchantDocumentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: merchant-documents-${self:provider.stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        LifecycleConfiguration:
+          Rules:
+            - Id: CleanupAbandonedDocuments
+              Status: Enabled
+              ExpirationInDays: 90

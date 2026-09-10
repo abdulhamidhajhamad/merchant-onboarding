@@ -34,6 +34,7 @@ export class S3Service {
       Bucket: this.bucketName,
       Key: key,
       ContentType: contentType,
+      ServerSideEncryption: 'AES256', 
     });
 
     const presignedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });

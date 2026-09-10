@@ -169,3 +169,19 @@
   - Updated application repository methods to support per-application evaluation persistence and status state locking.
   - Verified clean TypeScript compilation (`npm run build`) with zero type errors.
   - Executed end-to-end integration tests (`npm run test:e2e`) confirming 100% compliance across all 11 endpoints and verifying post-submission immutability enforcement.
+
+
+  ### Step 15: Security Controls, S3 Encryption & Section 10 Zero-Trust Hardening
+- **Goal:** Perform a comprehensive security audit against Section 10 ("Security & Privacy Requirements") and eliminate vulnerability gaps through infrastructure-as-code hardening, least-privilege policies, and runtime payload safeguards.
+- **Prompts & Strategy:**
+  - Conducted a line-by-line static security audit of AWS configurations, NestJS bootstrap handlers, and S3 upload services.
+  - Hardened S3 data persistence by injecting `ServerSideEncryption: 'AES256'` into `PutObjectCommand` inside `S3Service` to guarantee data encryption at rest for presigned URL uploads.
+  - Re-architected `serverless.yml` to define explicit, least-privilege IAM statements (`iamRoleStatements`) restricting Lambda execution strictly to required DynamoDB actions (`GetItem`, `PutItem`, `UpdateItem`, `Query`) and S3 actions (`GetObject`, `PutObject`).
+  - Configured AWS S3 bucket policies in IaC (`serverless.yml`) to enforce `PublicAccessBlockConfiguration` across all public ACL/policy flags and established S3 `LifecycleConfiguration` rules (90-day automatic expiration) to satisfy document retention and cleanup requirements.
+  - Enforced HTTPS/TLS transport security bounds in `serverless.yml` (`apiGateway.https: true`).
+  - Protected API boundary ingress against Denial of Service (DoS) oversized payload attacks by configuring strict Express body-parser size caps (`50kb`) in `main.ts`.
+- **My Refinement & Verification:**
+  - Re-verified entire source code to confirm absolute zero capture/storage of raw credit card PAN or CVV payloads.
+  - Confirmed global execution of `MaskSensitiveDataInterceptor` to strip raw SSN, Tax ID, and bank account fields across API responses and log streams.
+  - Verified clean TypeScript compilation (`npm run build`) with 0 errors.
+  - Executed full E2E test suite (`npm run test:e2e`) confirming 100% pass rate with zero security regression.
