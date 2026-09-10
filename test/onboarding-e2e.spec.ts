@@ -1,10 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ConfigModule } from '@nestjs/config';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { ApplicationRepository } from '../src/modules/database/application.repository';
 import { S3Service } from '../src/modules/document/s3.service';
 import { EvaluationService } from '../src/modules/evaluation/evaluation.service';
+import { HealthModule } from '../src/modules/health/health.module';
+import { DatabaseModule } from '../src/modules/database/database.module';
+import { DocumentModule } from '../src/modules/document/document.module';
+import { MccModule } from '../src/modules/mcc/mcc.module';
+import { ApplicationModule } from '../src/modules/application/application.module';
+import { EvaluationModule } from '../src/modules/evaluation/evaluation.module';
+import { MaskSensitiveDataInterceptor } from '../src/common/interceptors/mask-sensitive-data.interceptor';
+import { TimeoutInterceptor } from '../src/common/interceptors/timeout.interceptor';
 
 process.env.AWS_REGION = 'us-east-1';
 process.env.AWS_ACCESS_KEY_ID = 'mock-key';
@@ -16,7 +26,6 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
   let app: INestApplication;
   let applicationRepo: ApplicationRepository;
   let s3Service: S3Service;
-  let evaluationService: EvaluationService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,7 +37,6 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
 
     applicationRepo = moduleFixture.get<ApplicationRepository>(ApplicationRepository);
     s3Service = moduleFixture.get<S3Service>(S3Service);
-    evaluationService = moduleFixture.get<EvaluationService>(EvaluationService);
 
     const validApplicant = {
       firstName: 'John',
@@ -181,7 +189,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
 
   afterAll(async () => {
     if (app) {
-      await app.close(); // إغلاق التطبيق وخادم الـ HTTP ومنع الـ Open Handles
+      await app.close();
     }
   });
 
@@ -243,23 +251,86 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
   });
 
   describe('4. Reliability & Timeout Safeguards', () => {
-    it('should handle hanging external dependency and timeout safely before hard limit', async () => {
-      jest.spyOn(evaluationService, 'classifyBusiness').mockImplementation(
-        () => new Promise(() => {})
-      );
+    it('returns HTTP 408 when a hanging dependency exceeds the server-side timeout budget', async () => {
+      const serverTimeoutMs = 300;
+
+      @Module({
+        imports: [
+          ConfigModule.forRoot({ isGlobal: true }),
+          HealthModule,
+          DatabaseModule,
+          DocumentModule,
+          MccModule,
+          ApplicationModule,
+          EvaluationModule,
+        ],
+        providers: [
+          {
+            provide: APP_INTERCEPTOR,
+            useClass: MaskSensitiveDataInterceptor,
+          },
+          {
+            provide: APP_INTERCEPTOR,
+            useFactory: () => new TimeoutInterceptor(serverTimeoutMs),
+          },
+        ],
+      })
+      class ShortTimeoutAppModule {}
+
+      const timeoutModule = await Test.createTestingModule({
+        imports: [ShortTimeoutAppModule],
+      }).compile();
+
+      const timeoutApp = timeoutModule.createNestApplication();
+      await timeoutApp.init();
+
+      const shortTimeoutEvaluationService =
+        timeoutModule.get<EvaluationService>(EvaluationService);
+      const shortTimeoutRepo =
+        timeoutModule.get<ApplicationRepository>(ApplicationRepository);
+
+      jest
+        .spyOn(shortTimeoutEvaluationService, 'classifyBusiness')
+        .mockImplementation(() => new Promise(() => {}));
+      jest.spyOn(shortTimeoutRepo, 'updateMcc').mockResolvedValue({} as any);
+      jest
+        .spyOn(shortTimeoutRepo, 'updateEvaluation')
+        .mockResolvedValue({} as any);
 
       const startTime = Date.now();
+      // Intentionally no .timeout() on the client — the server interceptor must respond.
+      const response = await request(timeoutApp.getHttpServer())
+        .post('/applications/test-id/classify')
+        .send({ description: 'Hanging test description' });
+      const duration = Date.now() - startTime;
 
-      try {
-        await request(app.getHttpServer())
-          .post('/applications/test-id/classify')
-          .timeout(1000)
-          .send({ description: 'Hanging test description' });
-      } catch (err) {}
+      expect(response.status).toBe(408);
+      expect(response.body.statusCode).toBe(408);
+      expect(response.body.message).toEqual(
+        expect.stringMatching(/timed out/i),
+      );
+      expect(response.body.error).toBe('Request Timeout');
+
+      const bodyText = JSON.stringify(response.body);
+      expect(bodyText).not.toMatch(/node_modules|TimeoutInterceptor\.ts|at Object|stack/i);
+      expect(duration).toBeLessThan(1000);
+
+      await timeoutApp.close();
+    });
+
+    it('allows a normal classify request to complete successfully within the timeout budget', async () => {
+      const startTime = Date.now();
+
+      const response = await request(app.getHttpServer())
+        .post('/applications/test-id/classify')
+        .send({ description: 'Italian restaurant serving pizza and pasta' })
+        .expect(200);
 
       const duration = Date.now() - startTime;
 
-      expect(duration).toBeLessThan(4000);
+      expect(response.body.proposedMcc).toBe('5812');
+      expect(response.body).toHaveProperty('confidenceScore');
+      expect(duration).toBeLessThan(5000);
     });
   });
 });
