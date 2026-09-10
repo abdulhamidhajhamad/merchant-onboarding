@@ -136,7 +136,19 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       updatedAt: new Date().toISOString(),
     }));
 
-    // التعديل هنا: المطابقة التامة مع Return Type الخاص بـ S3Service
+    // Mock functions for status update and snapshot persistence required by strict submission workflow
+    jest.spyOn(applicationRepo, 'updateStatus').mockImplementation(async (id: string, status: string): Promise<any> => ({
+      id,
+      status,
+      version: 2,
+      updatedAt: new Date().toISOString(),
+    }));
+
+    jest.spyOn(applicationRepo, 'updateSubmissionSnapshot').mockImplementation(async (id: string, snapshot: any): Promise<any> => ({
+      id,
+      ...snapshot,
+    }));
+
     jest.spyOn(s3Service, 'generatePresignedUploadUrl').mockImplementation(async () => ({
       presignedUrl: 'https://mock-s3-presigned-url.com/upload',
       key: 'documents/doc-12345.pdf',

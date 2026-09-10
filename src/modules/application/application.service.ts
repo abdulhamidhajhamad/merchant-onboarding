@@ -71,7 +71,7 @@ export class ApplicationService {
     return this.applicationRepository.updateBusiness(id, parsed.data);
   }
 
-  async submitApplication(id: string) {
+async submitApplication(id: string) {
     const application = await this.getApplication(id);
 
     const applicantValidation = applicantSchema.safeParse(application.applicant ?? null);
@@ -111,19 +111,13 @@ export class ApplicationService {
       submittedAt,
     };
 
-    try {
-      await this.applicationRepository.updateStatus(id, 'SUBMITTED');
-      await this.applicationRepository.updateSubmissionSnapshot(id, {
-        applicationId: id,
-        submittedAt,
-        normalizedPayload,
-        status: 'SUBMITTED',
-      });
-    } catch (error) {
-      this.logger.warn(
-        `Submission persistence failed for ${id}; returning validated submission response without persisting snapshot: ${String(error)}`,
-      );
-    }
+    await this.applicationRepository.updateStatus(id, 'SUBMITTED');
+    await this.applicationRepository.updateSubmissionSnapshot(id, {
+      applicationId: id,
+      submittedAt,
+      normalizedPayload,
+      status: 'SUBMITTED',
+    });
 
     const sanitizedSubmission = maskSensitiveData({
       status: 'SUBMITTED',
