@@ -120,6 +120,8 @@ export class ApplicationService {
       applicationId: id,
       applicant: applicantValidation.data,
       business: businessValidation.data,
+      // Populated by EvaluationService.classifyBusinessForApplication via updateMcc;
+      // null only when classify has not been run for this application yet.
       mcc: application.mcc || null,
       documents: documents,
       reviewStatus: 'READY_FOR_UNDERWRITING',

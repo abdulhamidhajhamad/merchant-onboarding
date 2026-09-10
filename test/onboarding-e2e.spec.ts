@@ -159,6 +159,20 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       ...snapshot,
     }));
 
+    jest.spyOn(applicationRepo, 'updateMcc').mockImplementation(async (id: string, mcc: any): Promise<any> => ({
+      id,
+      mcc,
+      version: 2,
+      updatedAt: new Date().toISOString(),
+    }));
+
+    jest.spyOn(applicationRepo, 'updateEvaluation').mockImplementation(async (id: string, evaluation: any): Promise<any> => ({
+      id,
+      evaluation,
+      version: 3,
+      updatedAt: new Date().toISOString(),
+    }));
+
     jest.spyOn(s3Service, 'generatePresignedUploadUrl').mockImplementation(async () => ({
       presignedUrl: 'https://mock-s3-presigned-url.com/upload',
       key: 'documents/doc-12345.pdf',
@@ -190,6 +204,9 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
 
       expect(response.body).toHaveProperty('proposedMcc');
       expect(response.body).toHaveProperty('confidenceScore');
+      // MockEvaluationAiClient keyword match: restaurant/pizza/pasta → 5812 (not hardcoded 6012)
+      expect(response.body.proposedMcc).toBe('5812');
+      expect(response.body.proposedMcc).not.toBe('6012');
     });
 
     it('POST /applications/:id/evaluate - should calculate deterministic effective rate', async () => {

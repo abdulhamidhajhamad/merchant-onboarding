@@ -157,6 +157,22 @@ export class ApplicationRepository {
     );
   }
 
+  async updateMcc(
+    applicationId: string,
+    mccData: Record<string, unknown>,
+  ): Promise<ApplicationItem> {
+    return this.executeWithRetry(applicationId, (currentVersion) =>
+      this.updateWithConcurrencyControl(applicationId, currentVersion, {
+        UpdateExpression: 'SET mcc = :mcc, #v = #v + :inc, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':mcc': mccData,
+          ':inc': 1,
+          ':now': new Date().toISOString(),
+        },
+      }),
+    );
+  }
+
   async updateStatus(
     id: string,
     status: string,
