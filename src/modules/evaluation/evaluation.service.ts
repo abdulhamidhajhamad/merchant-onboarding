@@ -20,7 +20,6 @@ export class EvaluationService {
 
     const riskPolicy = this.riskPolicyService.evaluateRisk(code, providerId);
 
-    // إرجاع الاستجابة بالهيكل المتوافق مع اختبار الـ E2E وفي نفس الوقت دعم الكتالوج وسياسة المخاطر المفصولة
     return {
       proposedMcc: mccDetails.code,
       confidenceScore: 0.98,

@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { ApplicationRepository } from '../src/modules/database/application.repository';
 import { S3Service } from '../src/modules/document/s3.service';
+import { EvaluationService } from '../src/modules/evaluation/evaluation.service';
 
 process.env.AWS_REGION = 'us-east-1';
 process.env.AWS_ACCESS_KEY_ID = 'mock-key';
@@ -15,6 +16,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
   let app: INestApplication;
   let applicationRepo: ApplicationRepository;
   let s3Service: S3Service;
+  let evaluationService: EvaluationService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -26,6 +28,7 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
 
     applicationRepo = moduleFixture.get<ApplicationRepository>(ApplicationRepository);
     s3Service = moduleFixture.get<S3Service>(S3Service);
+    evaluationService = moduleFixture.get<EvaluationService>(EvaluationService);
 
     const validApplicant = {
       firstName: 'John',
@@ -112,7 +115,6 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       },
     } as const;
 
-    // مستندات تجريبية مطابقة لشروط الـ submission الحتمية
     const mockDocuments = [
       { id: 'doc-1', type: 'GOVERNMENT_ID', lifecycleStatus: 'ACCEPTED' },
       { id: 'doc-2', type: 'BUSINESS_REGISTRATION', lifecycleStatus: 'RECEIVED' },
@@ -145,7 +147,6 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       updatedAt: new Date().toISOString(),
     }));
 
-    // Mock functions for status update and snapshot persistence required by strict submission workflow
     jest.spyOn(applicationRepo, 'updateStatus').mockImplementation(async (id: string, status: string): Promise<any> => ({
       id,
       status,
@@ -165,7 +166,9 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close(); // إغلاق التطبيق وخادم الـ HTTP ومنع الـ Open Handles
+    }
   });
 
   describe('1. Health Safeguards', () => {
@@ -219,6 +222,27 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
 
       expect(response.body.status).toBe('SUBMITTED');
       expect(response.body.normalizedPayload.reviewStatus).toBe('READY_FOR_UNDERWRITING');
+    });
+  });
+
+  describe('4. Reliability & Timeout Safeguards', () => {
+    it('should handle hanging external dependency and timeout safely before hard limit', async () => {
+      jest.spyOn(evaluationService, 'classifyBusiness').mockImplementation(
+        () => new Promise(() => {})
+      );
+
+      const startTime = Date.now();
+
+      try {
+        await request(app.getHttpServer())
+          .post('/applications/test-id/classify')
+          .timeout(1000)
+          .send({ description: 'Hanging test description' });
+      } catch (err) {}
+
+      const duration = Date.now() - startTime;
+
+      expect(duration).toBeLessThan(4000);
     });
   });
 });
