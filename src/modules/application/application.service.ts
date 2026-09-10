@@ -6,7 +6,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
 import { maskSensitiveData } from '../../common/interceptors/mask-sensitive-data.interceptor';
 import { applicantSchema } from '../../common/schemas/applicant.schema';
 import { businessSchema } from '../../common/schemas/business.schema';
@@ -32,7 +31,7 @@ export class ApplicationService {
     return application;
   }
 
-  async updateApplicant(id: string, applicantData: CreateApplicantDto, currentVersion: number) {
+  async updateApplicant(id: string, applicantData: CreateApplicantDto) {
     const application = await this.getApplication(id);
     if (application.status === 'SUBMITTED') {
       throw new ConflictException('Application is locked after submission');
@@ -49,10 +48,10 @@ export class ApplicationService {
       });
     }
 
-    return this.applicationRepository.updateApplicant(id, parsed.data, currentVersion);
+    return this.applicationRepository.updateApplicant(id, parsed.data);
   }
 
-  async updateBusiness(id: string, businessData: CreateBusinessDto, currentVersion: number) {
+  async updateBusiness(id: string, businessData: CreateBusinessDto) {
     const application = await this.getApplication(id);
     if (application.status === 'SUBMITTED') {
       throw new ConflictException('Application is locked after submission');
@@ -69,7 +68,7 @@ export class ApplicationService {
       });
     }
 
-    return this.applicationRepository.updateBusiness(id, parsed.data, currentVersion);
+    return this.applicationRepository.updateBusiness(id, parsed.data);
   }
 
   async submitApplication(id: string) {
@@ -113,17 +112,13 @@ export class ApplicationService {
     };
 
     try {
-      await this.applicationRepository.updateStatus(id, 'SUBMITTED', application.version);
-      await this.applicationRepository.updateSubmissionSnapshot(
-        id,
-        {
-          applicationId: id,
-          submittedAt,
-          normalizedPayload,
-          status: 'SUBMITTED',
-        },
-        application.version + 1,
-      );
+      await this.applicationRepository.updateStatus(id, 'SUBMITTED');
+      await this.applicationRepository.updateSubmissionSnapshot(id, {
+        applicationId: id,
+        submittedAt,
+        normalizedPayload,
+        status: 'SUBMITTED',
+      });
     } catch (error) {
       this.logger.warn(
         `Submission persistence failed for ${id}; returning validated submission response without persisting snapshot: ${String(error)}`,

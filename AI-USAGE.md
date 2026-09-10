@@ -185,3 +185,16 @@
   - Confirmed global execution of `MaskSensitiveDataInterceptor` to strip raw SSN, Tax ID, and bank account fields across API responses and log streams.
   - Verified clean TypeScript compilation (`npm run build`) with 0 errors.
   - Executed full E2E test suite (`npm run test:e2e`) confirming 100% pass rate with zero security regression.
+
+  ---
+
+### Step 16: Optimistic Concurrency Control & Repository Layer Refactoring
+- **Goal:** Resolve parallel document upload conflicts (`409 Conflict` / `ConditionalCheckFailedException`), streamline state versioning across services, and eliminate dead DynamoDB primary key attributes.
+- **Prompts & Strategy:**
+  - Diagnosed `ConditionalCheckFailedException` errors occurring during concurrent/parallel document uploads (`Promise.all` in front-end workflows) caused by stale application versions.
+  - Implemented an automated **Exponential Backoff & Jitter Retry** loop (`executeWithRetry`) directly within `ApplicationRepository` to resolve optimistic concurrency locks internally without exposing conflict errors to end users.
+  - Refactored `DocumentService` and `ApplicationService` to eliminate manual `currentVersion` passing, offloading version resolution and retry mechanics entirely to the repository layer.
+  - Cleaned up the database abstraction by removing dead schema attributes (`pk` and `sk`) from `ApplicationItem` and repository methods, bringing the model in line with single-table DynamoDB primary key requirements (`id`).
+- **My Refinement & Verification:**
+  - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
+  - Executed full E2E test suite (`npm run test:e2e`) confirming 100% pass rates with zero regression in application lifecycles and document upload state transitions.

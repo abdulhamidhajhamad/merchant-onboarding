@@ -54,8 +54,6 @@ export interface ApplicationEvaluationRecord {
 }
 
 export interface ApplicationItem {
-  pk: string;
-  sk: string;
   id: string;
   status: string;
   version: number;
@@ -91,8 +89,6 @@ export class ApplicationRepository {
       id,
       status: 'DRAFT',
       version: 1,
-      pk: id,
-      sk: 'application',
       createdAt: now,
       updatedAt: now,
     };
@@ -132,135 +128,164 @@ export class ApplicationRepository {
   async updateApplicant(
     id: string,
     applicantData: Applicant,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
-    return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression: 'SET applicant = :applicant, #v = #v + :inc, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':applicant': applicantData,
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': new Date().toISOString(),
-      },
-    });
+    return this.executeWithRetry(id, (currentVersion) =>
+      this.updateWithConcurrencyControl(id, currentVersion, {
+        UpdateExpression: 'SET applicant = :applicant, #v = #v + :inc, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':applicant': applicantData,
+          ':inc': 1,
+          ':now': new Date().toISOString(),
+        },
+      }),
+    );
   }
 
   async updateBusiness(
     id: string,
     businessData: Business,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
-    return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression: 'SET business = :business, #v = #v + :inc, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':business': businessData,
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': new Date().toISOString(),
-      },
-    });
+    return this.executeWithRetry(id, (currentVersion) =>
+      this.updateWithConcurrencyControl(id, currentVersion, {
+        UpdateExpression: 'SET business = :business, #v = #v + :inc, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':business': businessData,
+          ':inc': 1,
+          ':now': new Date().toISOString(),
+        },
+      }),
+    );
   }
 
   async updateStatus(
     id: string,
     status: string,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
-    return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression: 'SET #status = :status, #v = #v + :inc, updatedAt = :now',
-      ExpressionAttributeNames: {
-        '#status': 'status',
-      },
-      ExpressionAttributeValues: {
-        ':status': status,
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': new Date().toISOString(),
-      },
-    });
+    return this.executeWithRetry(id, (currentVersion) =>
+      this.updateWithConcurrencyControl(id, currentVersion, {
+        UpdateExpression: 'SET #status = :status, #v = #v + :inc, updatedAt = :now',
+        ExpressionAttributeNames: {
+          '#status': 'status',
+        },
+        ExpressionAttributeValues: {
+          ':status': status,
+          ':inc': 1,
+          ':now': new Date().toISOString(),
+        },
+      }),
+    );
   }
 
   async upsertDocumentMetadata(
     applicationId: string,
     document: DocumentRecord,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
-    const application = await this.findById(applicationId);
-    if (!application) {
-      throw new ConflictException(
-        `Application with id "${applicationId}" does not exist`,
-      );
-    }
+    return this.executeWithRetry(applicationId, async (currentVersion) => {
+      const application = await this.findById(applicationId);
+      if (!application) {
+        throw new ConflictException(
+          `Application with id "${applicationId}" does not exist`,
+        );
+      }
 
-    const documents = Array.isArray(application.documents)
-      ? [...application.documents]
-      : [];
-    const existingIndex = documents.findIndex((item) => item.id === document.id);
-    const timestamp = new Date().toISOString();
+      const documents = Array.isArray(application.documents)
+        ? [...application.documents]
+        : [];
+      const existingIndex = documents.findIndex((item) => item.id === document.id);
+      const timestamp = new Date().toISOString();
 
-    const nextDocument: DocumentRecord = {
-      ...document,
-      createdAt: document.createdAt ?? timestamp,
-      updatedAt: timestamp,
-    };
+      const nextDocument: DocumentRecord = {
+        ...document,
+        createdAt: document.createdAt ?? timestamp,
+        updatedAt: timestamp,
+      };
 
-    if (existingIndex >= 0) {
-      documents[existingIndex] = { ...documents[existingIndex], ...nextDocument };
-    } else {
-      documents.push(nextDocument);
-    }
+      if (existingIndex >= 0) {
+        documents[existingIndex] = { ...documents[existingIndex], ...nextDocument };
+      } else {
+        documents.push(nextDocument);
+      }
 
-    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
-      UpdateExpression:
-        'SET documents = :documents, #v = #v + :inc, updatedAt = :now',
-      ExpressionAttributeValues: {
-        ':documents': documents,
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': timestamp,
-      },
+      return this.updateWithConcurrencyControl(applicationId, currentVersion, {
+        UpdateExpression:
+          'SET documents = :documents, #v = #v + :inc, updatedAt = :now',
+        ExpressionAttributeValues: {
+          ':documents': documents,
+          ':inc': 1,
+          ':now': timestamp,
+        },
+      });
     });
   }
 
   async updateSubmissionSnapshot(
     applicationId: string,
     snapshot: SubmissionSnapshot,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
     const timestamp = new Date().toISOString();
 
-    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
-      UpdateExpression:
-        'SET submissionSnapshot = :submissionSnapshot, updatedAt = :now, #v = #v + :inc',
-      ExpressionAttributeValues: {
-        ':submissionSnapshot': snapshot,
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': timestamp,
-      },
-    });
+    return this.executeWithRetry(applicationId, (currentVersion) =>
+      this.updateWithConcurrencyControl(applicationId, currentVersion, {
+        UpdateExpression:
+          'SET submissionSnapshot = :submissionSnapshot, updatedAt = :now, #v = #v + :inc',
+        ExpressionAttributeValues: {
+          ':submissionSnapshot': snapshot,
+          ':inc': 1,
+          ':now': timestamp,
+        },
+      }),
+    );
   }
 
   async updateEvaluation(
     applicationId: string,
     evaluation: ApplicationEvaluationRecord,
-    currentVersion: number,
   ): Promise<ApplicationItem> {
     const timestamp = new Date().toISOString();
 
-    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
-      UpdateExpression:
-        'SET evaluation = :evaluation, updatedAt = :now, #v = #v + :inc',
-      ExpressionAttributeValues: {
-        ':evaluation': {
-          ...evaluation,
-          updatedAt: timestamp,
+    return this.executeWithRetry(applicationId, (currentVersion) =>
+      this.updateWithConcurrencyControl(applicationId, currentVersion, {
+        UpdateExpression:
+          'SET evaluation = :evaluation, updatedAt = :now, #v = #v + :inc',
+        ExpressionAttributeValues: {
+          ':evaluation': {
+            ...evaluation,
+            updatedAt: timestamp,
+          },
+          ':inc': 1,
+          ':now': timestamp,
         },
-        ':currentVersion': currentVersion,
-        ':inc': 1,
-        ':now': timestamp,
-      },
-    });
+      }),
+    );
+  }
+
+  private async executeWithRetry<T>(
+    id: string,
+    operation: (currentVersion: number) => Promise<T>,
+    maxRetries = 5,
+    baseDelayMs = 50,
+  ): Promise<T> {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      const application = await this.findById(id);
+      if (!application) {
+        throw new ConflictException(`Application with id "${id}" does not exist`);
+      }
+
+      try {
+        return await operation(application.version);
+      } catch (error: unknown) {
+        if (this.isConditionalCheckFailure(error) && attempt < maxRetries - 1) {
+          const delay = Math.pow(2, attempt) * baseDelayMs + Math.random() * 50;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new ConflictException(
+      `Max retries reached while resolving optimistic lock for application "${id}"`,
+    );
   }
 
   private async updateWithConcurrencyControl(

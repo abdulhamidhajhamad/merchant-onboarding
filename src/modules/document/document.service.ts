@@ -61,7 +61,6 @@ export class DocumentService {
     await this.applicationRepository.upsertDocumentMetadata(
       applicationId,
       documentRecord,
-      application.version,
     );
 
     const { presignedUrl } = await this.s3Service.generatePresignedUploadUrl(
@@ -79,7 +78,6 @@ export class DocumentService {
     await this.applicationRepository.upsertDocumentMetadata(
       applicationId,
       uploadingDocument,
-      application.version + 1,
     );
 
     return {
@@ -144,7 +142,6 @@ export class DocumentService {
     await this.applicationRepository.upsertDocumentMetadata(
       applicationId,
       updatedDocument,
-      application.version,
     );
 
     return {
