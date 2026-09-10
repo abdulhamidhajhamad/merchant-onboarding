@@ -1,40 +1,73 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { mccSchema } from '../../common/schemas/mcc.schema';
+import { Injectable, Logger } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface MccItem {
   code: string;
   description: string;
   category: string;
-  confidenceScore: number;
-  riskTags: ('STANDARD' | 'ENHANCED_REVIEW' | 'RESTRICTED')[];
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  requiresEnhancedReview: boolean;
 }
 
 @Injectable()
 export class MccService {
-  private readonly catalog: MccItem[] = [
-    { code: '5812', description: 'Eating Places and Restaurants', category: 'Food & Beverage', confidenceScore: 0.95, riskTags: ['STANDARD'] },
-    { code: '5411', description: 'Grocery Stores and Supermarkets', category: 'Retail', confidenceScore: 0.98, riskTags: ['STANDARD'] },
-    { code: '5734', description: 'Computer Software Stores', category: 'Technology', confidenceScore: 0.90, riskTags: ['STANDARD'] },
-    { code: '7995', description: 'Gambling Transactions & Betting', category: 'Entertainment', confidenceScore: 0.99, riskTags: ['RESTRICTED'] },
-    { code: '5967', description: 'Direct Marketing - Inbound Telemarketing', category: 'Direct Marketing', confidenceScore: 0.85, riskTags: ['ENHANCED_REVIEW'] },
-  ];
+  private readonly logger = new Logger(MccService.name);
+  private catalog: MccItem[] = [];
 
-  findAll(): MccItem[] {
-    return this.catalog;
+  constructor() {
+    this.loadCatalog();
+  }
+
+  private loadCatalog() {
+    try {
+      const filePath = path.resolve(__dirname, 'data/mcc-catalog.json');
+      if (fs.existsSync(filePath)) {
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        this.catalog = JSON.parse(fileContent);
+        this.logger.log(`Loaded ${this.catalog.length} MCC codes into active catalog.`);
+      } else {
+        this.logger.warn('MCC catalog file not found. Falling back to default core set.');
+        this.catalog = [
+          { code: '5812', description: 'Restaurants', category: 'Food', riskLevel: 'LOW', requiresEnhancedReview: false },
+          { code: '6012', description: 'Financial Services', category: 'Financial', riskLevel: 'HIGH', requiresEnhancedReview: true },
+          { code: '6051', description: 'Quasi Cash', category: 'Financial', riskLevel: 'HIGH', requiresEnhancedReview: true },
+          { code: '6211', description: 'Security Brokers', category: 'Financial', riskLevel: 'MEDIUM', requiresEnhancedReview: true },
+        ];
+      }
+    } catch (error) {
+      this.logger.error(`Failed to load MCC catalog: ${String(error)}`);
+      this.catalog = [];
+    }
   }
 
   search(query: string): MccItem[] {
-    const q = query.toLowerCase().trim();
+    if (!query) return this.catalog;
+    const lowerQuery = query.toLowerCase();
     return this.catalog.filter(
-      (item) => item.code.includes(q) || item.description.toLowerCase().includes(q) || item.category.toLowerCase().includes(q),
+      (item) =>
+        item.code.includes(lowerQuery) ||
+        item.description.toLowerCase().includes(lowerQuery) ||
+        item.category.toLowerCase().includes(lowerQuery),
     );
   }
 
-  findByCode(code: string): MccItem {
-    const item = this.catalog.find((m) => m.code === code);
-    if (!item) {
-      throw new NotFoundException(`MCC code ${code} not found`);
+  findByCode(code: string): MccItem | undefined {
+    return this.catalog.find((item) => item.code === code);
+  }
+
+  evaluateRisk(code: string): { riskLevel: string; requiresEnhancedReview: boolean } {
+    const mccItem = this.findByCode(code);
+    if (!mccItem) {
+      return { riskLevel: 'HIGH', requiresEnhancedReview: true }; 
     }
-    return item;
+    return {
+      riskLevel: mccItem.riskLevel,
+      requiresEnhancedReview: mccItem.requiresEnhancedReview,
+    };
+  }
+
+  findAll() {
+    return this.catalog;
   }
 }

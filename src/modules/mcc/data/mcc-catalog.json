@@ -1,0 +1,58 @@
+[
+  {
+    "code": "5812",
+    "description": "Eating Places and Restaurants",
+    "category": "Food & Dining",
+    "riskLevel": "LOW",
+    "requiresEnhancedReview": false
+  },
+  {
+    "code": "5411",
+    "description": "Grocery Stores, Supermarkets",
+    "category": "Retail",
+    "riskLevel": "LOW",
+    "requiresEnhancedReview": false
+  },
+  {
+    "code": "5734",
+    "description": "Computer Software Stores",
+    "category": "Technology",
+    "riskLevel": "LOW",
+    "requiresEnhancedReview": false
+  },
+  {
+    "code": "7995",
+    "description": "Betting, Casino Gaming Wagers",
+    "category": "Gambling",
+    "riskLevel": "HIGH",
+    "requiresEnhancedReview": true
+  },
+  {
+    "code": "5967",
+    "description": "Direct Marketing - Direct Selling",
+    "category": "E-Commerce",
+    "riskLevel": "MEDIUM",
+    "requiresEnhancedReview": true
+  },
+  {
+    "code": "6012",
+    "description": "Financial Institutions - Merchandise, Services, and Debt Repayment",
+    "category": "Financial Services",
+    "riskLevel": "HIGH",
+    "requiresEnhancedReview": true
+  },
+  {
+    "code": "6051",
+    "description": "Quasi Cash - Merchant, Foreign Currency, Non-Fiat Currency",
+    "category": "Financial Services",
+    "riskLevel": "HIGH",
+    "requiresEnhancedReview": true
+  },
+  {
+    "code": "6211",
+    "description": "Security Brokers, Dealers and Investment Services",
+    "category": "Financial Services",
+    "riskLevel": "MEDIUM",
+    "requiresEnhancedReview": true
+  }
+]

@@ -218,3 +218,38 @@
   - Replaced wildcard DynamoDB IAM permissions (`table/*`) with scoped ARN references (`!GetAtt MerchantTable.Arn`) to comply with strict Security & Privacy standards.
 - **My Refinement & Verification:**
   - Verified `serverless.yml` syntax and confirmed local/cloud deployment readiness using Serverless Framework CLI.
+
+  ---
+
+### Step 17: Repository Concurrency & Type Signature Refactoring
+- **Goal:** Eliminate optimistic locking race conditions during concurrent updates and ensure strict TypeScript compilation across service/controller signatures.
+- **Prompts & Strategy:**
+  - Resolved `ConditionalCheckFailedException` and race conditions during concurrent API calls by encapsulating version increments and retry loops inside `ApplicationRepository`.
+  - Refactored `ApplicationController`, `ApplicationService`, and `EvaluationService` to decouple version tracking from the API/Service layer, aligning method signatures with the updated repository design.
+  - Eliminated redundant `currentVersion` parameters across all module calls to enforce clean architecture and prevent stale-state overrides.
+- **My Refinement & Verification:**
+  - Successfully compiled the project using `npm run build` with zero TypeScript errors.
+  - Executed end-to-end integration tests (`npm run test:e2e`) to verify that all application lifecycle and evaluation routes function seamlessly under the updated signatures.
+
+---
+
+### Step 18: Infrastructure-as-Code (IaC) & Least-Privilege IAM Hardening
+- **Goal:** Provision the missing DynamoDB table resource in `serverless.yml` and enforce strict least-privilege IAM policies.
+- **Prompts & Strategy:**
+  - Added full `AWS::DynamoDB::Table` resource configuration under `resources.Resources` in `serverless.yml` to support automated production deployments.
+  - Replaced wildcard DynamoDB IAM permissions (`table/*`) with scoped ARN references (`!GetAtt MerchantTable.Arn`) to comply with strict Security & Privacy standards.
+- **My Refinement & Verification:**
+  - Verified `serverless.yml` syntax and confirmed local/cloud deployment readiness using Serverless Framework CLI.
+
+---
+
+### Step 19: Real MCC Catalog Seeding, Specialized Purchase-Type Handling & Evaluation Integration
+- **Goal:** Replace legacy mock catalog stubs with an official Visa/Mastercard compliant dataset supporting specialized purchase-type underwriting rules (6012, 6051, 6211) and automated data refresh scripting.
+- **Prompts & Strategy:**
+  - Replaced the 5-code stub catalog with an official externalized JSON dataset (`src/modules/mcc/data/mcc-catalog.json`) incorporating Visa/Mastercard specialized codes (6012, 6051, 6211) with explicit risk tags and enhanced review configurations.
+  - Implemented an automated database/cache seeding script (`scripts/seed-mcc.ts`) and registered the execution hook (`npm run seed:mcc`) in `package.json` to fulfill dynamic dataset refresh requirements.
+  - Upgraded `MccService` to dynamically read and parse the catalog file at runtime with robust fallback protection.
+  - Integrated `MccService` directly into `EvaluationService` to enforce mandatory enhanced underwriting flags (`requiresEnhancedReview: true`) and generate explainable risk signals for specialized purchase types.
+- **My Refinement & Verification:**
+  - Verified clean TypeScript compilation (`npm run build`) with zero type errors.
+  - Executed full E2E test suite (`npm run test:e2e`) confirming 100% compliance across evaluation and risk tagging pathways.
