@@ -1,0 +1,67 @@
+{
+  "application": {
+    "id": "c56a4180-65aa-42ec-a945-5fd21dec0538",
+    "status": "DRAFT",
+    "version": 1,
+    "applicant": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "dateOfBirth": "1990-01-01",
+      "residentialAddress": {
+        "addressLine1": "123 Main St",
+        "city": "Seattle",
+        "state": "WA",
+        "postalCode": "98101",
+        "country": "US"
+      },
+      "contact": {
+        "email": "john.doe@example.com",
+        "phone": "+12065550123"
+      },
+      "role": "Owner",
+      "ownershipPercentage": 100,
+      "identityMetadata": {
+        "idType": "PASSPORT",
+        "maskedIdentifier": "9876"
+      },
+      "attestation": {
+        "termsAccepted": true,
+        "termsVersion": "v1",
+        "consentedAt": "2026-06-06T00:00:00.000Z"
+      }
+    },
+    "business": {
+      "legalBusinessName": "Acme Retail LLC",
+      "dbaName": "Acme Store",
+      "entityType": "LLC",
+      "formationCountry": "US",
+      "formationState": "DE",
+      "registrationIdentifier": "12-3456789",
+      "registeredAddress": {
+        "addressLine1": "456 Corp Blvd",
+        "city": "Dover",
+        "state": "DE",
+        "postalCode": "19901",
+        "country": "US"
+      },
+      "operatingAddress": {
+        "addressLine1": "123 Main St",
+        "city": "Seattle",
+        "state": "WA",
+        "postalCode": "98101",
+        "country": "US"
+      },
+      "website": "https://acmeretail.example.com",
+      "businessDescription": "Online and retail electronic goods store.",
+      "businessStartDate": "2024-01-15",
+      "metrics": {
+        "expectedAnnualCardVolume": 250000,
+        "averageTicket": 150,
+        "highestTicket": 1200,
+        "monthlyTransactionCount": 1400,
+        "cardPresentPercentage": 30,
+        "ecommercePercentage": 70
+      }
+    }
+  }
+}

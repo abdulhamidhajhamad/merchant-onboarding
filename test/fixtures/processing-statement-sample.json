@@ -1,0 +1,13 @@
+{
+  "statement": {
+    "processorName": "Global Payments Provider",
+    "statementPeriod": "2026-05",
+    "monthlyVolume": 24500.50,
+    "discountRate": 0.0215,
+    "transactionFee": 0.25,
+    "monthlyFee": 49.00,
+    "chargebackFee": 15.00,
+    "effectiveRate": 0.0264,
+    "confidence": 0.95
+  }
+}
