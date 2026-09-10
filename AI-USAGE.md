@@ -100,3 +100,13 @@
   - Added `POST /applications/classify` and `POST /applications/evaluate` controllers with complete Swagger metadata.
   - Separated deterministic calculation (effective processing rate) from explainable AI risk signals (`HIGH_CNP_RATIO`).
   - Integrated `EvaluationModule` into `AppModule` and verified clean build (`npm run build`).
+
+  ### Step 10: E2E Integration Testing & Reliability Verification
+- **Goal:** Implement end-to-end integration tests (`test/onboarding-e2e.spec.ts`) validating health checks, MCC classifications, financial rate evaluations, and full application lifecycles.
+- **Prompts & Fixes Applied:**
+  - Resolved `CredentialsProviderError` and `AggregateError` during local test execution by stubbing AWS SDK environment variables (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`).
+  - Implemented Jest function spies (`jest.spyOn`) on `ApplicationRepository` and `S3Service` to completely decouple E2E test execution from external AWS/DynamoDB resources.
+  - Aligned mock return interfaces strictly with NestJS domain types (matching `{ presignedUrl, key }` contracts for S3 signed URLs).
+- **Actions & Verification:**
+  - Standardized assertion checks for status endpoints (normalizing string responses via `.toLowerCase()`).
+  - Executed `npm run test:e2e` successfully, verifying all E2E test scenarios passed (`5 passed, 5 total`).
