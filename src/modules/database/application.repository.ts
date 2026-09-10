@@ -35,6 +35,24 @@ export interface DocumentRecord {
   updatedAt?: string;
 }
 
+export interface SubmissionSnapshot {
+  applicationId: string;
+  submittedAt: string;
+  status: 'SUBMITTED';
+  normalizedPayload: Record<string, unknown>;
+}
+
+export interface ApplicationEvaluationRecord {
+  applicationId: string;
+  status: 'PENDING' | 'COMPLETE' | 'FAILED';
+  riskSignals?: unknown[];
+  deterministicMetrics?: Record<string, unknown>;
+  classification?: Record<string, unknown>;
+  summary?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ApplicationItem {
   pk: string;
   sk: string;
@@ -45,6 +63,8 @@ export interface ApplicationItem {
   business?: Business;
   mcc?: Record<string, unknown>;
   documents?: DocumentRecord[];
+  submissionSnapshot?: SubmissionSnapshot;
+  evaluation?: ApplicationEvaluationRecord;
   createdAt: string;
   updatedAt: string;
 }
@@ -195,6 +215,47 @@ export class ApplicationRepository {
         'SET documents = :documents, #v = #v + :inc, updatedAt = :now',
       ExpressionAttributeValues: {
         ':documents': documents,
+        ':currentVersion': currentVersion,
+        ':inc': 1,
+        ':now': timestamp,
+      },
+    });
+  }
+
+  async updateSubmissionSnapshot(
+    applicationId: string,
+    snapshot: SubmissionSnapshot,
+    currentVersion: number,
+  ): Promise<ApplicationItem> {
+    const timestamp = new Date().toISOString();
+
+    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
+      UpdateExpression:
+        'SET submissionSnapshot = :submissionSnapshot, updatedAt = :now, #v = #v + :inc',
+      ExpressionAttributeValues: {
+        ':submissionSnapshot': snapshot,
+        ':currentVersion': currentVersion,
+        ':inc': 1,
+        ':now': timestamp,
+      },
+    });
+  }
+
+  async updateEvaluation(
+    applicationId: string,
+    evaluation: ApplicationEvaluationRecord,
+    currentVersion: number,
+  ): Promise<ApplicationItem> {
+    const timestamp = new Date().toISOString();
+
+    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
+      UpdateExpression:
+        'SET evaluation = :evaluation, updatedAt = :now, #v = #v + :inc',
+      ExpressionAttributeValues: {
+        ':evaluation': {
+          ...evaluation,
+          updatedAt: timestamp,
+        },
         ':currentVersion': currentVersion,
         ':inc': 1,
         ':now': timestamp,

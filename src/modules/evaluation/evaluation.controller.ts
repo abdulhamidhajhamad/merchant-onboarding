@@ -1,12 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import {
   classifyBusinessRequestSchema,
   evaluateStatementRequestSchema,
   type ClassifyBusinessRequest,
   type EvaluateStatementRequest,
 } from '../../common/schemas/evaluation.schema';
-import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { EvaluationService } from './evaluation.service';
 
 @ApiTags('Evaluation & AI')
@@ -24,6 +24,17 @@ export class EvaluationController {
     return this.evaluationService.classifyBusiness(dto);
   }
 
+  @Post(':id/classify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Persist an MCC classification result for a given application' })
+  @ApiResponse({ status: 200, description: 'Application-scoped MCC classification proposal' })
+  async classifyForApplication(
+    @Param('id') applicationId: string,
+    @Body(new ZodValidationPipe(classifyBusinessRequestSchema)) dto: ClassifyBusinessRequest,
+  ) {
+    return this.evaluationService.classifyBusinessForApplication(applicationId, dto);
+  }
+
   @Post('evaluate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Analyze processing statement and calculate deterministic rates with risk signals' })
@@ -32,5 +43,24 @@ export class EvaluationController {
     @Body(new ZodValidationPipe(evaluateStatementRequestSchema)) dto: EvaluateStatementRequest,
   ) {
     return this.evaluationService.evaluateStatement(dto);
+  }
+
+  @Post(':id/evaluate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Analyze processing statement and persist underwriting result for an application' })
+  @ApiResponse({ status: 200, description: 'Persisted application evaluation summary' })
+  async evaluateForApplication(
+    @Param('id') applicationId: string,
+    @Body(new ZodValidationPipe(evaluateStatementRequestSchema)) dto: EvaluateStatementRequest,
+  ) {
+    return this.evaluationService.evaluateStatementForApplication(applicationId, dto);
+  }
+
+  @Get(':id/evaluation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Retrieve stored evaluation state for an application' })
+  @ApiResponse({ status: 200, description: 'Stored evaluation result' })
+  async getEvaluationForApplication(@Param('id') applicationId: string) {
+    return this.evaluationService.getApplicationEvaluation(applicationId);
   }
 }

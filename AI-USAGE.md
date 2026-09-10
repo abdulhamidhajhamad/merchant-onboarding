@@ -153,3 +153,19 @@
 - **My Refinement & Verification:**
   - Verified clean TypeScript compilation (`npm run build`) with zero type errors.
   - Executed end-to-end test suite (`npm run test:e2e`) to confirm full system compatibility and regression-free operation.
+
+  ---
+
+### Step 14: API Surface Contract Alignment, Route Normalization & Submit-Locking Semantics
+- **Goal:** Achieve 100% specification compliance by eliminating contract drift across REST endpoints, enforcing application-scoped evaluation routes, implementing strict Zod DTO runtime validation, and securing submitted applications against post-submission modifications.
+- **Prompts & Strategy:**
+  - Audited full project controllers, services, and repositories against the 11 target API behaviors to identify and remediate path/query mismatches.
+  - Re-aligned document upload endpoint path to exact spec: `POST /applications/:id/documents/presign`, and updated MCC catalog query filter from `?q=` to `?query=`.
+  - Re-architected evaluation and classification endpoints to operate under application-scoped resource routes: `POST /applications/:id/classify`, `POST /applications/:id/evaluate`, and implemented missing state retrieval route `GET /applications/:id/evaluation`.
+  - Hardened `POST /applications/:id/submit` by enforcing Zod runtime schema validation across applicant and business payloads, transitioning database status to `SUBMITTED`, and capturing an immutable submission review snapshot.
+  - Implemented an immutability guard across `PATCH /applications/:id/applicant` and `PATCH /applications/:id/business` that returns `409 ConflictException` if modification is attempted on a locked/submitted application.
+  - Replaced loose controller body interfaces with strict Zod validation pipes to reject untrusted client payloads early.
+- **My Refinement & Verification:**
+  - Updated application repository methods to support per-application evaluation persistence and status state locking.
+  - Verified clean TypeScript compilation (`npm run build`) with zero type errors.
+  - Executed end-to-end integration tests (`npm run test:e2e`) confirming 100% compliance across all 11 endpoints and verifying post-submission immutability enforcement.

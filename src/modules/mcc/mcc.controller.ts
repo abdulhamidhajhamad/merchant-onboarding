@@ -6,9 +6,10 @@ export class MccController {
   constructor(private readonly mccService: MccService) {}
 
   @Get()
-  getAllOrSearch(@Query('q') query?: string) {
-    if (query) {
-      return this.mccService.search(query);
+  getAllOrSearch(@Query('query') query?: string, @Query('q') legacyQuery?: string) {
+    const searchTerm = (query ?? legacyQuery ?? '').trim();
+    if (searchTerm) {
+      return this.mccService.search(searchTerm);
     }
     return this.mccService.findAll();
   }

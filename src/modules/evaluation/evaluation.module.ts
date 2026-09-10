@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DatabaseModule } from '../database/database.module';
 import { EVALUATION_AI_CLIENT } from './adapters/ai-client.interface';
 import { MockEvaluationAiClient } from './adapters/mock-ai-client.adapter';
 import { EvaluationController } from './evaluation.controller';
 import { EvaluationService } from './evaluation.service';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, DatabaseModule],
   controllers: [EvaluationController],
   providers: [
     EvaluationService,

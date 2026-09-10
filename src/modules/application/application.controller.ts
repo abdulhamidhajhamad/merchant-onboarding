@@ -1,8 +1,22 @@
-import { Controller, Post, Get, Patch, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ApplicationService } from './application.service';
-import { UpdateApplicantBodyDto, UpdateBusinessBodyDto } from './dto/application.dto';
-import { ApiResponse } from '@nestjs/swagger/dist/decorators/api-response.decorator';
-import { ApiOperation } from '@nestjs/swagger/dist/decorators/api-operation.decorator';
+import {
+  updateApplicantBodySchema,
+  updateBusinessBodySchema,
+  type UpdateApplicantBodyDto,
+  type UpdateBusinessBodyDto,
+} from './dto/application.dto';
 
 @Controller('applications')
 export class ApplicationController {
@@ -24,7 +38,22 @@ export class ApplicationController {
     @Param('id') id: string,
     @Body() body: UpdateApplicantBodyDto,
   ) {
-    return this.applicationService.updateApplicant(id, body.applicant, body.currentVersion);
+    const parsed = updateApplicantBodySchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: 'Applicant update payload is invalid',
+        errors: parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.') || 'root',
+          message: issue.message,
+        })),
+      });
+    }
+
+    return this.applicationService.updateApplicant(
+      id,
+      parsed.data.applicant,
+      parsed.data.currentVersion,
+    );
   }
 
   @Patch(':id/business')
@@ -32,7 +61,22 @@ export class ApplicationController {
     @Param('id') id: string,
     @Body() body: UpdateBusinessBodyDto,
   ) {
-    return this.applicationService.updateBusiness(id, body.business, body.currentVersion);
+    const parsed = updateBusinessBodySchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: 'Business update payload is invalid',
+        errors: parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.') || 'root',
+          message: issue.message,
+        })),
+      });
+    }
+
+    return this.applicationService.updateBusiness(
+      id,
+      parsed.data.business,
+      parsed.data.currentVersion,
+    );
   }
 
   @Post(':id/submit')

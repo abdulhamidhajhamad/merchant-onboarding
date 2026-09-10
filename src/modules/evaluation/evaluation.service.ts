@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   aiClassificationResultSchema,
   classifyBusinessRequestSchema,
@@ -9,12 +9,16 @@ import {
   type EvaluateStatementRequest,
   type RiskSignal,
 } from '../../common/schemas/evaluation.schema';
+import { type ApplicationEvaluationRecord, ApplicationRepository } from '../database/application.repository';
 import { EVALUATION_AI_CLIENT, type EvaluationAiClient } from './adapters/ai-client.interface';
 import { calculateChargebackRate, calculateEffectiveRate, formatPercent } from './evaluation.math';
 
 @Injectable()
 export class EvaluationService {
-  constructor(@Inject(EVALUATION_AI_CLIENT) private readonly aiClient: EvaluationAiClient) {}
+  constructor(
+    @Inject(EVALUATION_AI_CLIENT) private readonly aiClient: EvaluationAiClient,
+    private readonly applicationRepository: ApplicationRepository,
+  ) {}
 
   async classifyBusiness(input: ClassifyBusinessRequest) {
     const parsed = classifyBusinessRequestSchema.safeParse(input);
@@ -54,6 +58,71 @@ export class EvaluationService {
       summary: validated.data.summary,
       candidates: validated.data.candidates,
       profileSummary: this.buildProfileSummary(parsed.data.business),
+    };
+  }
+
+  async classifyBusinessForApplication(applicationId: string, input: ClassifyBusinessRequest) {
+    const application = await this.applicationRepository.findById(applicationId);
+    if (!application) {
+      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+    }
+
+    const result = await this.classifyBusiness(input);
+    const evaluationRecord: ApplicationEvaluationRecord = {
+      applicationId,
+      status: 'COMPLETE',
+      classification: {
+        proposedMcc: result.proposedMcc,
+        confidenceScore: result.confidenceScore,
+        summary: result.summary,
+        candidates: result.candidates,
+      },
+      summary: result.summary,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord, application.version);
+    return {
+      applicationId,
+      ...result,
+    };
+  }
+
+  async evaluateStatementForApplication(applicationId: string, input?: EvaluateStatementRequest) {
+    const application = await this.applicationRepository.findById(applicationId);
+    if (!application) {
+      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+    }
+
+    const result = await this.evaluateStatement(input);
+    const evaluationRecord: ApplicationEvaluationRecord = {
+      applicationId,
+      status: 'COMPLETE',
+      riskSignals: result.riskSignals,
+      deterministicMetrics: result.deterministicMetrics,
+      summary: result.summary,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord, application.version);
+    return {
+      applicationId,
+      ...result,
+    };
+  }
+
+  async getApplicationEvaluation(applicationId: string) {
+    const application = await this.applicationRepository.findById(applicationId);
+    if (!application) {
+      throw new NotFoundException(`Application with ID ${applicationId} not found`);
+    }
+
+    return application.evaluation ?? {
+      applicationId,
+      status: 'PENDING',
+      summary: 'No evaluation has been generated for this application yet.',
     };
   }
 

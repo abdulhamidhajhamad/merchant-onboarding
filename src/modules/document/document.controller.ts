@@ -26,7 +26,7 @@ class CompleteDocumentUploadDto {
 export class DocumentController {
   constructor(private readonly documentService: DocumentService) {}
 
-  @Post('presigned-url')
+  @Post('presign')
   @HttpCode(HttpStatus.OK)
   async getPresignedUrl(
     @Param('id') applicationId: string,
@@ -38,6 +38,15 @@ export class DocumentController {
       dto.mimeType,
       dto.fileSizeBytes,
     );
+  }
+
+  @Post('presigned-url')
+  @HttpCode(HttpStatus.OK)
+  async getPresignedUrlLegacy(
+    @Param('id') applicationId: string,
+    @Body() dto: PresignedUrlDto,
+  ) {
+    return this.getPresignedUrl(applicationId, dto);
   }
 
   @Post(':documentId/complete')
