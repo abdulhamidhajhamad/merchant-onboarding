@@ -253,3 +253,16 @@
 - **My Refinement & Verification:**
   - Verified clean TypeScript compilation (`npm run build`) with zero type errors.
   - Executed full E2E test suite (`npm run test:e2e`) confirming 100% compliance across evaluation and risk tagging pathways.
+
+  ---
+
+  ### Step 20: Decoupling MCC Catalog from Risk Policy Architecture
+- **Goal:** Resolve tight coupling between the static MCC reference catalog and provider risk policies by extracting risk rules into an independent `RiskPolicyService` with support for provider-specific overrides.
+- **Prompts & Strategy:**
+  - Purged static `riskTags` and `riskLevel` metadata from `mcc-catalog.json` to keep the catalog strictly as a pure industry standard reference.
+  - Implemented `RiskPolicyService` to encapsulate underwriting rules, default risk ratings, and custom provider overrides (`providerId`).
+  - Refactored `EvaluationService` to compose pure MCC catalog details with dynamically evaluated risk policies, ensuring high extensibility and testability.
+  - Updated E2E tests and DTO contracts to align perfectly with the structured risk assessment and catalog responses.
+- **My Refinement & Verification:**
+  - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
+  - Executed full end-to-end integration test suite (`npm run test:e2e`) confirming 100% pass rates across all verification suites.
