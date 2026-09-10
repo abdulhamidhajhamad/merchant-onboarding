@@ -133,9 +133,8 @@ Honest gaps relative to the **current** codebase (not historical stubs that have
 - **Multi-owner / controlling persons:** only a single `applicant` field exists on the application record (`ApplicationRepository` / `updateApplicant`). Full multi-beneficial-owner capture as separate individuals (with dedicated endpoints) is **not** implemented—tracked as follow-up work.
 - **AI providers:** classification and statement extraction use `MockEvaluationAiClient` behind `EVALUATION_AI_CLIENT`. Controllers and persistence do not need to change to swap in a real model/provider.
 - **Post-upload document intelligence:** upload complete moves documents to `RECEIVED`; there is no OCR/async review pipeline advancing `PROCESSING` → `ACCEPTED` / `NEEDS_REVIEW` automatically (no EventBridge/webhook consumer in-repo).
-- **Document type naming drift:** Zod document types use values such as `GOVT_ID` / `BUSINESS_REG`, while submit-time required-document checks still look for `GOVERNMENT_ID` / `BUSINESS_REGISTRATION`. Aligning those enums is remaining cleanup.
 
-**Not gaps anymore (do not treat as unfinished):** expanded MCC catalog seeding, wiring of the AI adapter into `EvaluationService` with DynamoDB persistence of `mcc` / evaluation, Zod validation on document controller boundaries, and a real server-side timeout test.
+**Not gaps anymore (do not treat as unfinished):**  expanded MCC catalog seeding, wiring of the AI adapter into `EvaluationService` with DynamoDB persistence of `mcc` / evaluation, Zod validation on document controller boundaries, a real server-side timeout test, and document type enum alignment between Zod validation and submit-time required-document checks (now covered by integration tests).
 
 ## Further reading
 
