@@ -110,3 +110,18 @@
 - **Actions & Verification:**
   - Standardized assertion checks for status endpoints (normalizing string responses via `.toLowerCase()`).
   - Executed `npm run test:e2e` successfully, verifying all E2E test scenarios passed (`5 passed, 5 total`).
+
+  ---
+
+### Step 11: Security Hardening, Document Validation & Lifecycle Refactoring
+- **Goal:** Address compliance gaps by implementing global sensitive data masking (PII/PCI), strict document upload validation (MIME/size), persistence of integrity metadata (SHA-256), and deterministic document lifecycle state transitions.
+- **Prompts & Strategy:**
+  - Designed and implemented a custom NestJS interceptor (`MaskSensitiveDataInterceptor`) to automatically sanitize outbound HTTP payloads and log streams without installing third-party dependencies.
+  - Hardened document upload logic in `DocumentService` to enforce an absolute 10 MB limit and restrict MIME types to allowed formats (`application/pdf`, `image/jpeg`, `image/png`).
+  - Updated `ApplicationRepository` to support idempotent storage of document completion metadata (`sha256Checksum`, `uploadedAt`).
+  - Refactored `DocumentService` to enforce strict state machine transitions (`REQUESTED` -> `UPLOADING` -> `RECEIVED` -> `PROCESSING` -> `ACCEPTED` / `NEEDS_REVIEW` / `REJECTED`) with explicit `BadRequestException` guards against illegal jumps.
+- **My Refinement & Verification:**
+  - Registered `MaskSensitiveDataInterceptor` globally in `src/main.ts`.
+  - Applied sanitization logic within `ApplicationService` to ensure raw applicant/business payloads are masked upon application submission.
+  - Verified compilation via `npm run build` (0 errors).
+  - Executed full E2E test suite via `npm run test:e2e -- --runInBand` with all 5 integration suites passing (100% success rate).
