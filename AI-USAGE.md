@@ -198,3 +198,23 @@
 - **My Refinement & Verification:**
   - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
   - Executed full E2E test suite (`npm run test:e2e`) confirming 100% pass rates with zero regression in application lifecycles and document upload state transitions.
+
+  ### Step 17: Repository Concurrency & Type Signature Refactoring
+- **Goal:** Eliminate optimistic locking race conditions during concurrent updates and ensure strict TypeScript compilation across service/controller signatures.
+- **Prompts & Strategy:**
+  - Resolved `ConditionalCheckFailedException` and race conditions during concurrent API calls by encapsulating version increments and retry loops inside `ApplicationRepository`.
+  - Refactored `ApplicationController`, `ApplicationService`, and `EvaluationService` to decouple version tracking from the API/Service layer, aligning method signatures with the updated repository design.
+  - Eliminated redundant `currentVersion` parameters across all module calls to enforce clean architecture and prevent stale-state overrides.
+- **My Refinement & Verification:**
+  - Successfully compiled the project using `npm run build` with zero TypeScript errors.
+  - Executed end-to-end integration tests (`npm run test:e2e`) to verify that all application lifecycle and evaluation routes function seamlessly under the updated signatures.
+
+---
+
+### Step 18: Infrastructure-as-Code (IaC) & Least-Privilege IAM Hardening
+- **Goal:** Provision the missing DynamoDB table resource in `serverless.yml` and enforce strict least-privilege IAM policies.
+- **Prompts & Strategy:**
+  - Added full `AWS::DynamoDB::Table` resource configuration under `resources.Resources` in `serverless.yml` to support automated production deployments.
+  - Replaced wildcard DynamoDB IAM permissions (`table/*`) with scoped ARN references (`!GetAtt MerchantTable.Arn`) to comply with strict Security & Privacy standards.
+- **My Refinement & Verification:**
+  - Verified `serverless.yml` syntax and confirmed local/cloud deployment readiness using Serverless Framework CLI.

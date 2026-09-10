@@ -4,7 +4,7 @@ provider:
   name: aws
   runtime: nodejs20.x
   timeout: 35
-  region: ${AWS_REGION:us-east-1}
+  region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'local'}
   apiGateway:
     minimumCompressionSize: 1024
@@ -19,18 +19,19 @@ provider:
             - dynamodb:PutItem
             - dynamodb:UpdateItem
             - dynamodb:Query
-          Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/*"
+          Resource: !GetAtt ApplicationsTable.Arn
         - Effect: Allow
           Action:
             - s3:GetObject
             - s3:PutObject
-          Resource: "arn:aws:s3:::merchant-documents-*/*"
+          Resource: !Sub "arn:aws:s3:::${MerchantDocumentsBucket}/*"
 
 environment:
   PORT: 3000
-  AWS_REGION: ${AWS_REGION}
-  DYNAMODB_ENDPOINT: ${DYNAMODB_ENDPOINT}
-  S3_ENDPOINT: ${S3_ENDPOINT}
+  AWS_REGION: ${self:provider.region}
+  DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT, ''}
+  S3_ENDPOINT: ${env:S3_ENDPOINT, ''}
+  DYNAMODB_TABLE_NAME: !Ref ApplicationsTable
 
 functions:
   app:
@@ -68,6 +69,18 @@ custom:
 
 resources:
   Resources:
+    ApplicationsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: merchant-applications-${self:provider.stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+
     MerchantDocumentsBucket:
       Type: AWS::S3::Bucket
       Properties:
