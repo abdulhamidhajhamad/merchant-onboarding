@@ -52,7 +52,6 @@ export class ApplicationController {
     return this.applicationService.updateApplicant(
       id,
       parsed.data.applicant,
-      parsed.data.currentVersion,
     );
   }
 
@@ -75,7 +74,6 @@ export class ApplicationController {
     return this.applicationService.updateBusiness(
       id,
       parsed.data.business,
-      parsed.data.currentVersion,
     );
   }
 

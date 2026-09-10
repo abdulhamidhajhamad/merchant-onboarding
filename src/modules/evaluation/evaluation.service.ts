@@ -82,7 +82,7 @@ export class EvaluationService {
       updatedAt: new Date().toISOString(),
     };
 
-    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord, application.version);
+    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord);
     return {
       applicationId,
       ...result,
@@ -106,7 +106,7 @@ export class EvaluationService {
       updatedAt: new Date().toISOString(),
     };
 
-    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord, application.version);
+    await this.applicationRepository.updateEvaluation(applicationId, evaluationRecord);
     return {
       applicationId,
       ...result,
