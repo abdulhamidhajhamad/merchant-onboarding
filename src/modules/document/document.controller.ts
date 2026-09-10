@@ -1,10 +1,25 @@
-import { Controller, Post, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { DocumentService } from './document.service';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DocumentType } from '../../common/schemas';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger'; 
+import { DocumentService } from './document.service';
+
 class PresignedUrlDto {
   documentType: DocumentType;
   mimeType: string;
+  fileSizeBytes: number;
+}
+
+class CompleteDocumentUploadDto {
+  checksum?: string;
+  sha256Checksum?: string;
+  uploadedAt?: string;
 }
 
 @Controller('applications/:id/documents')
@@ -21,6 +36,7 @@ export class DocumentController {
       applicationId,
       dto.documentType,
       dto.mimeType,
+      dto.fileSizeBytes,
     );
   }
 
@@ -31,8 +47,13 @@ export class DocumentController {
   async completeUpload(
     @Param('id') applicationId: string,
     @Param('documentId') documentId: string,
-    @Body('checksum') checksum: string,
+    @Body() dto: CompleteDocumentUploadDto,
   ) {
-    return this.documentService.completeUpload(applicationId, documentId, checksum);
+    return this.documentService.completeUpload(
+      applicationId,
+      documentId,
+      dto.sha256Checksum ?? dto.checksum,
+      dto.uploadedAt,
+    );
   }
 }

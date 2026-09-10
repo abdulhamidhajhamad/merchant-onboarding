@@ -11,6 +11,30 @@ import { DynamoService } from './dynamo.service';
 
 export type ApplicationStatus = 'DRAFT' | string;
 
+export type DocumentLifecycleStatus =
+  | 'REQUESTED'
+  | 'UPLOADING'
+  | 'RECEIVED'
+  | 'PROCESSING'
+  | 'ACCEPTED'
+  | 'NEEDS_REVIEW'
+  | 'REJECTED';
+
+export interface DocumentRecord {
+  id: string;
+  type: string;
+  lifecycleStatus: DocumentLifecycleStatus;
+  mimeType: string;
+  fileSizeBytes: number;
+  s3Key: string;
+  sha256Checksum?: string;
+  uploadedAt?: string | null;
+  requestedAt: string;
+  expiresAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ApplicationItem {
   pk: string;
   sk: string;
@@ -19,8 +43,8 @@ export interface ApplicationItem {
   version: number;
   applicant?: Record<string, any>;
   business?: Record<string, any>;
-  mcc?: Record<string, any>; 
-  documents?: Record<string, any>[];
+  mcc?: Record<string, any>;
+  documents?: DocumentRecord[];
   createdAt: string;
   updatedAt: string;
 }
@@ -91,8 +115,7 @@ export class ApplicationRepository {
     currentVersion: number,
   ): Promise<ApplicationItem> {
     return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression:
-        'SET applicant = :applicant, #v = #v + :inc, updated_at = :now',
+      UpdateExpression: 'SET applicant = :applicant, #v = #v + :inc, updatedAt = :now',
       ExpressionAttributeValues: {
         ':applicant': applicantData,
         ':currentVersion': currentVersion,
@@ -108,8 +131,7 @@ export class ApplicationRepository {
     currentVersion: number,
   ): Promise<ApplicationItem> {
     return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression:
-        'SET business = :business, #v = #v + :inc, updated_at = :now',
+      UpdateExpression: 'SET business = :business, #v = #v + :inc, updatedAt = :now',
       ExpressionAttributeValues: {
         ':business': businessData,
         ':currentVersion': currentVersion,
@@ -125,8 +147,7 @@ export class ApplicationRepository {
     currentVersion: number,
   ): Promise<ApplicationItem> {
     return this.updateWithConcurrencyControl(id, currentVersion, {
-      UpdateExpression:
-        'SET #status = :status, #v = #v + :inc, updated_at = :now',
+      UpdateExpression: 'SET #status = :status, #v = #v + :inc, updatedAt = :now',
       ExpressionAttributeNames: {
         '#status': 'status',
       },
@@ -135,6 +156,48 @@ export class ApplicationRepository {
         ':currentVersion': currentVersion,
         ':inc': 1,
         ':now': new Date().toISOString(),
+      },
+    });
+  }
+
+  async upsertDocumentMetadata(
+    applicationId: string,
+    document: DocumentRecord,
+    currentVersion: number,
+  ): Promise<ApplicationItem> {
+    const application = await this.findById(applicationId);
+    if (!application) {
+      throw new ConflictException(
+        `Application with id "${applicationId}" does not exist`,
+      );
+    }
+
+    const documents = Array.isArray(application.documents)
+      ? [...application.documents]
+      : [];
+    const existingIndex = documents.findIndex((item) => item.id === document.id);
+    const timestamp = new Date().toISOString();
+
+    const nextDocument: DocumentRecord = {
+      ...document,
+      createdAt: document.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    };
+
+    if (existingIndex >= 0) {
+      documents[existingIndex] = { ...documents[existingIndex], ...nextDocument };
+    } else {
+      documents.push(nextDocument);
+    }
+
+    return this.updateWithConcurrencyControl(applicationId, currentVersion, {
+      UpdateExpression:
+        'SET documents = :documents, #v = #v + :inc, updatedAt = :now',
+      ExpressionAttributeValues: {
+        ':documents': documents,
+        ':currentVersion': currentVersion,
+        ':inc': 1,
+        ':now': timestamp,
       },
     });
   }
@@ -162,7 +225,10 @@ export class ApplicationRepository {
           ConditionExpression: 'attribute_exists(id) AND version = :currentVersion',
           ExpressionAttributeNames: expressionAttributeNames,
           UpdateExpression: updateInput.UpdateExpression,
-          ExpressionAttributeValues: updateInput.ExpressionAttributeValues,
+          ExpressionAttributeValues: {
+            ':currentVersion': currentVersion,
+            ...(updateInput.ExpressionAttributeValues ?? {}),
+          },
           ReturnValues: 'ALL_NEW',
         }),
       );

@@ -1,10 +1,20 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  maskSensitiveData,
+} from '../../common/interceptors/mask-sensitive-data.interceptor';
 import { ApplicationRepository } from '../database/application.repository';
 import { CreateApplicantDto, CreateBusinessDto } from './dto/application.dto';
 
 @Injectable()
 export class ApplicationService {
+  private readonly logger = new Logger(ApplicationService.name);
+
   constructor(private readonly applicationRepository: ApplicationRepository) {}
 
   async createApplication() {
@@ -41,18 +51,28 @@ export class ApplicationService {
       throw new BadRequestException('Business profile is missing or incomplete.');
     }
 
-    return {
+    const normalizedPayload = {
+      applicationId: id,
+      applicant: application.applicant,
+      business: application.business,
+      mcc: application.mcc || null,
+      documents: application.documents || [],
+      reviewStatus: 'READY_FOR_UNDERWRITING',
+    };
+
+    const sanitizedSubmission = maskSensitiveData({
       status: 'SUBMITTED',
       applicationId: id,
       submittedAt: new Date().toISOString(),
-      normalizedPayload: {
-        applicationId: id,
-        applicant: application.applicant,
-        business: application.business,
-        mcc: application.mcc || null,
-        documents: application.documents || [],
-        reviewStatus: 'READY_FOR_UNDERWRITING',
-      },
-    };
+      normalizedPayload,
+    });
+
+    this.logger.log(
+      `Application ${id} submitted with sanitized payload: ${JSON.stringify(
+        sanitizedSubmission,
+      )}`,
+    );
+
+    return sanitizedSubmission;
   }
 }
