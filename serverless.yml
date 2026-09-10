@@ -6,10 +6,16 @@ provider:
   timeout: 35
   region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'local'}
+  environment:
+    PORT: 3000
+    AWS_REGION: ${self:provider.region}
+    DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT, ''}
+    S3_ENDPOINT: ${env:S3_ENDPOINT, ''}
+    DYNAMODB_TABLE_NAME: !Ref ApplicationsTable
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameStageMatching: false
-    https: true 
+    https: true
   iam:
     role:
       statements:
@@ -26,18 +32,11 @@ provider:
             - s3:PutObject
           Resource: !Sub "arn:aws:s3:::${MerchantDocumentsBucket}/*"
 
-environment:
-  PORT: 3000
-  AWS_REGION: ${self:provider.region}
-  DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT, ''}
-  S3_ENDPOINT: ${env:S3_ENDPOINT, ''}
-  DYNAMODB_TABLE_NAME: !Ref ApplicationsTable
-
 functions:
   app:
     handler: src/lambda.handler
     events:
-      - http: 
+      - http:
           path: /
           method: get
           cors: true

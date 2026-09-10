@@ -60,8 +60,8 @@ describe('ApplicationService', () => {
                     requestedSettlementBank: { bankName: 'Bank', accountHolder: 'Acme', routingNumberMasked: '1234', accountNumberMasked: '5678' },
                   },
                   documents: [
-                    { type: 'GOVERNMENT_ID', lifecycleStatus: 'ACCEPTED' },
-                    { type: 'BUSINESS_REGISTRATION', lifecycleStatus: 'RECEIVED' },
+                    { type: 'GOVT_ID', lifecycleStatus: 'ACCEPTED' },
+                    { type: 'BUSINESS_REG', lifecycleStatus: 'RECEIVED' },
                     { type: 'BANK_EVIDENCE', lifecycleStatus: 'RECEIVED' },
                   ],
                 };

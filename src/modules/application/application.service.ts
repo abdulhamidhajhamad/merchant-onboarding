@@ -101,8 +101,7 @@ export class ApplicationService {
     }
 
     const documents = application.documents || [];
-    const requiredDocumentTypes = ['GOVERNMENT_ID', 'BUSINESS_REGISTRATION', 'BANK_EVIDENCE'];
-
+const requiredDocumentTypes = ['GOVT_ID', 'BUSINESS_REG', 'BANK_EVIDENCE'];
     for (const reqType of requiredDocumentTypes) {
       const doc = documents.find((d: any) => d.type === reqType);
       

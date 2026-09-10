@@ -123,11 +123,11 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       },
     } as const;
 
-    const mockDocuments = [
-      { id: 'doc-1', type: 'GOVERNMENT_ID', lifecycleStatus: 'ACCEPTED' },
-      { id: 'doc-2', type: 'BUSINESS_REGISTRATION', lifecycleStatus: 'RECEIVED' },
-      { id: 'doc-3', type: 'BANK_EVIDENCE', lifecycleStatus: 'RECEIVED' },
-    ];
+const mockDocuments = [
+  { id: 'doc-1', type: 'GOVT_ID', lifecycleStatus: 'ACCEPTED' },
+  { id: 'doc-2', type: 'BUSINESS_REG', lifecycleStatus: 'RECEIVED' },
+  { id: 'doc-3', type: 'BANK_EVIDENCE', lifecycleStatus: 'RECEIVED' },
+];
 
     jest.spyOn(applicationRepo, 'create').mockImplementation(async (data: any): Promise<any> => ({
       pk: `APP#${data.id || 'test-id'}`,
