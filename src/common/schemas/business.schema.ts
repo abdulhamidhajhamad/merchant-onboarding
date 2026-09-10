@@ -12,8 +12,8 @@ export const businessEntityTypeSchema = z.enum([
   'LLC',
   'CORPORATION',
   'PARTNERSHIP',
-  'SOLE_PROPRIETOR',
-  'NONPROFIT',
+  'SOLE_PROPRIETORSHIP',
+  'NON_PROFIT',
   'OTHER',
 ]);
 
@@ -25,15 +25,16 @@ export const businessRegistrationTypeSchema = z.enum([
 ]);
 
 export const businessAddressSchema = z.object({
-  line1: z.string().trim().min(1).max(120),
-  line2: z.string().trim().min(1).max(120).optional(),
+  addressLine1: z.string().trim().min(1).max(120),
+  addressLine2: z.string().trim().min(1).max(120).optional(),
   city: z.string().trim().min(1).max(80),
-  stateProvince: z.string().trim().min(1).max(80),
+  state: z.string().trim().min(1).max(80),
+  province: z.string().trim().min(1).max(80).optional(),
   postalCode: z.string().trim().min(2).max(20),
   country: z
     .string()
     .trim()
-    .regex(/^[A-Z]{2}$/, 'Country must be ISO 3166-1 alpha-2 uppercase'),
+    .regex(/^[A-Z]{2,3}$/, 'Country must be ISO alpha-2 or alpha-3 uppercase'),
 });
 
 export const settlementBankMetadataSchema = z.object({
@@ -46,29 +47,44 @@ export const settlementBankMetadataSchema = z.object({
       /^(?:\*{0,5}\d{4})$/,
       'Routing number must be masked and only include optional mask chars plus last 4 digits',
     ),
-  accountLast4: z
+  accountNumberMasked: z
     .string()
-    .regex(/^\d{4}$/, 'Account field must only include the last 4 digits'),
+    .trim()
+    .regex(
+      /^(?:\*{0,6}\d{4})$/,
+      'Account number must be masked and only include optional mask chars plus last 4 digits',
+    ),
+});
+
+export const beneficialOwnerSchema = z.object({
+  applicantId: z.string().trim().min(1),
+  ownershipPercentage: z.number().min(0).max(100),
+  relationship: z.string().trim().min(1).max(120).optional(),
+});
+
+export const processingHistorySchema = z.object({
+  existingProcessorName: z.string().trim().max(200).optional(),
+  summary: z.string().trim().max(1000).optional(),
 });
 
 export const businessSchema = z
   .object({
-    legalBusinessName: z.string().trim().min(1).max(200),
-    dbaTradeName: z.string().trim().min(1).max(200),
+    legalName: z.string().trim().min(1).max(200),
+    dba: z.string().trim().min(1).max(200).optional(),
     entityType: businessEntityTypeSchema,
     formationCountry: z
       .string()
       .trim()
-      .regex(/^[A-Z]{2}$/, 'Formation country must be ISO 3166-1 alpha-2 uppercase'),
-    formationStateProvince: z.string().trim().min(1).max(80),
+      .regex(/^[A-Z]{2,3}$/, 'Formation country must be ISO alpha-2 or alpha-3 uppercase'),
+    formationState: z.string().trim().min(1).max(80),
     registrationIdentifier: z.object({
       type: businessRegistrationTypeSchema,
       value: z.string().trim().min(3).max(64),
     }),
     registeredAddress: businessAddressSchema,
     operatingAddress: businessAddressSchema,
-    websiteUrl: z.string().trim().url(),
-    customerFacingDescription: z.string().trim().min(10).max(2000),
+    website: z.string().trim().url(),
+    businessDescription: z.string().trim().min(10).max(2000),
     businessStartDate: isoDateOnlySchema,
     cardVolumeMetrics: z.object({
       expectedAnnualVolume: z.number().positive(),
@@ -79,7 +95,10 @@ export const businessSchema = z
       cardNotPresentPercentage: z.number().min(0).max(100),
       ecommercePercentage: z.number().min(0).max(100),
     }),
+    beneficialOwners: z.array(beneficialOwnerSchema).optional(),
     requestedSettlementBank: settlementBankMetadataSchema,
+    existingProcessorName: z.string().trim().max(200).optional(),
+    processingHistory: processingHistorySchema.optional(),
   })
   .superRefine((business, ctx) => {
     const {
@@ -109,4 +128,6 @@ export type BusinessEntityType = z.infer<typeof businessEntityTypeSchema>;
 export type BusinessRegistrationType = z.infer<typeof businessRegistrationTypeSchema>;
 export type BusinessAddress = z.infer<typeof businessAddressSchema>;
 export type SettlementBankMetadata = z.infer<typeof settlementBankMetadataSchema>;
+export type BeneficialOwner = z.infer<typeof beneficialOwnerSchema>;
+export type ProcessingHistory = z.infer<typeof processingHistorySchema>;
 export type Business = z.infer<typeof businessSchema>;

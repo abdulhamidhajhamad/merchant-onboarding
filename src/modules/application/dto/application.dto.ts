@@ -1,9 +1,12 @@
+import { z } from 'zod';
 import { applicantSchema } from '../../../common/schemas/applicant.schema';
 import { businessSchema } from '../../../common/schemas/business.schema';
-import { z } from 'zod';
 
-export type CreateApplicantDto = z.infer<typeof applicantSchema>;
-export type CreateBusinessDto = z.infer<typeof businessSchema>;
+export const applicantDtoSchema = applicantSchema;
+export const businessDtoSchema = businessSchema;
+
+export type CreateApplicantDto = z.infer<typeof applicantDtoSchema>;
+export type CreateBusinessDto = z.infer<typeof businessDtoSchema>;
 
 export class UpdateApplicantBodyDto {
   applicant: CreateApplicantDto;

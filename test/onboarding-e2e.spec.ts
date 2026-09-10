@@ -27,27 +27,111 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
     applicationRepo = moduleFixture.get<ApplicationRepository>(ApplicationRepository);
     s3Service = moduleFixture.get<S3Service>(S3Service);
 
-    // Mock لقواعد البيانات
-    jest.spyOn(applicationRepo, 'create').mockImplementation(async (data: any) => ({
+    const validApplicant = {
+      firstName: 'John',
+      middleName: 'Michael',
+      lastName: 'Doe',
+      dateOfBirth: '1990-05-16',
+      residentialAddress: {
+        addressLine1: '123 Main St',
+        city: 'Seattle',
+        state: 'WA',
+        postalCode: '98101',
+        country: 'US',
+      },
+      contact: {
+        email: 'john@example.com',
+        phone: '+12065550123',
+      },
+      role: 'Owner',
+      ownershipPercentage: 100,
+      identityMetadata: {
+        idType: 'DRIVERS_LICENSE' as const,
+        maskedIdentifier: '1234',
+      },
+      attestation: {
+        termsAccepted: true,
+        termsVersion: 'v1.0',
+        consentedAt: new Date().toISOString(),
+      },
+    } as const;
+
+    const validBusiness = {
+      legalName: 'Acme LLC',
+      dba: 'Acme Market',
+      entityType: 'LLC' as const,
+      formationCountry: 'US',
+      formationState: 'WA',
+      registrationIdentifier: {
+        type: 'EIN' as const,
+        value: '12-3456789',
+      },
+      registeredAddress: {
+        addressLine1: '100 Pine St',
+        city: 'Seattle',
+        state: 'WA',
+        postalCode: '98101',
+        country: 'US',
+      },
+      operatingAddress: {
+        addressLine1: '100 Pine St',
+        city: 'Seattle',
+        state: 'WA',
+        postalCode: '98101',
+        country: 'US',
+      },
+      website: 'https://www.acme.com',
+      businessDescription: 'Retail merchant processing services for a growing local business.',
+      businessStartDate: '2018-01-02',
+      cardVolumeMetrics: {
+        expectedAnnualVolume: 1500000,
+        averageTicketSize: 80,
+        highestTicketSize: 500,
+        monthlyTransactionCount: 2500,
+        cardPresentPercentage: 60,
+        cardNotPresentPercentage: 40,
+        ecommercePercentage: 20,
+      },
+      beneficialOwners: [
+        {
+          applicantId: 'owner-1',
+          ownershipPercentage: 100,
+          relationship: 'Owner',
+        },
+      ],
+      requestedSettlementBank: {
+        bankName: 'Bank of America',
+        accountHolder: 'Acme LLC',
+        routingNumberMasked: '****1234',
+        accountNumberMasked: '****4321',
+      },
+      existingProcessorName: 'Square',
+      processingHistory: {
+        existingProcessorName: 'Square',
+        summary: 'Prior processor for 18 months with no material issues.',
+      },
+    } as const;
+
+    jest.spyOn(applicationRepo, 'create').mockImplementation(async (data: any): Promise<any> => ({
       pk: `APP#${data.id || 'test-id'}`,
       sk: 'METADATA',
       id: data.id || 'test-id',
       status: 'DRAFT',
       version: 1,
-      applicant: data.applicant,
-      business: data.business,
+      applicant: data.applicant ?? validApplicant,
+      business: data.business ?? validBusiness,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));
 
-    jest.spyOn(applicationRepo, 'findById').mockImplementation(async (id: string) => ({
+    jest.spyOn(applicationRepo, 'findById').mockImplementation(async (id: string): Promise<any> => ({
       pk: `APP#${id}`,
       sk: 'METADATA',
       id,
       status: 'DRAFT',
       version: 1,
-      applicant: { name: 'John Doe', email: 'john@example.com' },
-      business: { legalName: 'Acme LLC', taxId: '12-3456789' },
+      applicant: validApplicant,
+      business: validBusiness,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }));

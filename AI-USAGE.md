@@ -125,3 +125,17 @@
   - Applied sanitization logic within `ApplicationService` to ensure raw applicant/business payloads are masked upon application submission.
   - Verified compilation via `npm run build` (0 errors).
   - Executed full E2E test suite via `npm run test:e2e -- --runInBand` with all 5 integration suites passing (100% success rate).
+
+  ---
+
+### Step 12: Data Contract Compliance Refactoring (Sections 3.1 & 3.2)
+- **Goal:** Resolve compliance gaps by aligning `Applicant` and `Business` schemas strictly with Sections 3.1 & 3.2 data contract specifications, resolving naming mismatches, missing nested structures, and loose persistence typing.
+- **Prompts & Strategy:**
+  - Performed an automated system topology trace to generate a pre-remediation impact ledger across DTOs, Services, Repositories, and E2E Test suites.
+  - Refactored `applicant.schema.ts` and `business.schema.ts` to enforce strictly typed field renames (`firstName`, `addressLine1`, `legalName`, `dba`, `accountNumberMasked`), updated legal entity enums (`SOLE_PROPRIETORSHIP`, `NON_PROFIT`), and added missing schemas (`beneficialOwners`, `processingHistory`).
+  - Updated `attestation` payload requirements to strictly enforce `termsAccepted: boolean` and ISO timestamp `consentedAt`.
+  - Replaced loose `Record<string, any>` types in `ApplicationRepository` with concrete domain entities (`Applicant`, `Business`) to prevent persistence data drift.
+  - Remediated mock JSON objects, DTO type inferences, and HTTP test payloads in `test/onboarding-e2e.spec.ts` to reflect updated schema contracts.
+- **My Refinement & Verification:**
+  - Verified clean TypeScript project compilation via `npm run build` with 0 errors.
+  - Executed unit test and E2E integration test suites via `npm run test` and `npm run test:e2e` to confirm 100% test pass rates without validation regressions.

@@ -41,9 +41,9 @@ export interface ApplicationItem {
   id: string;
   status: string;
   version: number;
-  applicant?: Record<string, any>;
-  business?: Record<string, any>;
-  mcc?: Record<string, any>;
+  applicant?: Applicant;
+  business?: Business;
+  mcc?: Record<string, unknown>;
   documents?: DocumentRecord[];
   createdAt: string;
   updatedAt: string;
