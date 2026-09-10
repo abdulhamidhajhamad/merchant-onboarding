@@ -1,5 +1,12 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  classifyBusinessRequestSchema,
+  evaluateStatementRequestSchema,
+  type ClassifyBusinessRequest,
+  type EvaluateStatementRequest,
+} from '../../common/schemas/evaluation.schema';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { EvaluationService } from './evaluation.service';
 
 @ApiTags('Evaluation & AI')
@@ -11,15 +18,19 @@ export class EvaluationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Propose MCC and risk tags based on business description' })
   @ApiResponse({ status: 200, description: 'MCC classification proposal' })
-  async classify(@Body('description') description: string) {
-    return this.evaluationService.classifyBusiness(description || '');
+  async classify(
+    @Body(new ZodValidationPipe(classifyBusinessRequestSchema)) dto: ClassifyBusinessRequest,
+  ) {
+    return this.evaluationService.classifyBusiness(dto);
   }
 
   @Post('evaluate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Analyze processing statement and calculate deterministic rates with risk signals' })
   @ApiResponse({ status: 200, description: 'Underwriting evaluation summary' })
-  async evaluate(@Body() body: any) {
-    return this.evaluationService.evaluateStatement(body);
+  async evaluate(
+    @Body(new ZodValidationPipe(evaluateStatementRequestSchema)) dto: EvaluateStatementRequest,
+  ) {
+    return this.evaluationService.evaluateStatement(dto);
   }
 }
