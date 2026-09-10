@@ -6,8 +6,6 @@ export interface MccItem {
   code: string;
   description: string;
   category: string;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
-  requiresEnhancedReview: boolean;
 }
 
 @Injectable()
@@ -29,10 +27,32 @@ export class MccService {
       } else {
         this.logger.warn('MCC catalog file not found. Falling back to default core set.');
         this.catalog = [
-          { code: '5812', description: 'Restaurants', category: 'Food', riskLevel: 'LOW', requiresEnhancedReview: false },
-          { code: '6012', description: 'Financial Services', category: 'Financial', riskLevel: 'HIGH', requiresEnhancedReview: true },
-          { code: '6051', description: 'Quasi Cash', category: 'Financial', riskLevel: 'HIGH', requiresEnhancedReview: true },
-          { code: '6211', description: 'Security Brokers', category: 'Financial', riskLevel: 'MEDIUM', requiresEnhancedReview: true },
+          {
+            code: '5812',
+            description: 'Eating Places and Restaurants',
+            category: 'Food & Beverage',
+          },
+          {
+            code: '5411',
+            description: 'Grocery Stores, Supermarkets',
+            category: 'Retail',
+          },
+          {
+            code: '6012',
+            description: 'Financial Institutions - Merchandise, Services, and Debt Repayment',
+            category: 'Financial Services',
+          },
+          {
+            code: '6051',
+            description:
+              'Non-Financial Institutions - Foreign Currency, Money Orders, and Travelers Cheques',
+            category: 'Financial Services',
+          },
+          {
+            code: '6211',
+            description: 'Security Brokers/Dealers',
+            category: 'Financial Services',
+          },
         ];
       }
     } catch (error) {
@@ -54,17 +74,6 @@ export class MccService {
 
   findByCode(code: string): MccItem | undefined {
     return this.catalog.find((item) => item.code === code);
-  }
-
-  evaluateRisk(code: string): { riskLevel: string; requiresEnhancedReview: boolean } {
-    const mccItem = this.findByCode(code);
-    if (!mccItem) {
-      return { riskLevel: 'HIGH', requiresEnhancedReview: true }; 
-    }
-    return {
-      riskLevel: mccItem.riskLevel,
-      requiresEnhancedReview: mccItem.requiresEnhancedReview,
-    };
   }
 
   findAll() {
