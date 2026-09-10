@@ -37,9 +37,10 @@ export class EvaluationService {
     return this.classifyBusiness(dto);
   }
 
-  async evaluateStatement(dto: any) {
-    const volume = dto?.cardMetrics?.monthlyVolume || 10000;
-    const fees = dto?.cardMetrics?.totalFees || 250;
+async evaluateStatement(dto: any) {
+    const volume = dto?.cardMetrics?.monthlyVolume ?? dto?.monthlyVolume ?? 0;
+    const fees = dto?.cardMetrics?.totalFees ?? dto?.totalFees ?? 0;
+    
     const effectiveRate = volume > 0 ? (fees / volume) * 100 : 0;
 
     return {
