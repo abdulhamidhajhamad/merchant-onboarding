@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { applicantSchema } from '../../../common/schemas/applicant.schema';
 import { businessSchema } from '../../../common/schemas/business.schema';
@@ -15,7 +16,7 @@ export const updateBusinessBodySchema = z.object({
   currentVersion: z.number().int().nonnegative(),
 });
 
-export type CreateApplicantDto = z.infer<typeof applicantDtoSchema>;
-export type CreateBusinessDto = z.infer<typeof businessDtoSchema>;
-export type UpdateApplicantBodyDto = z.infer<typeof updateApplicantBodySchema>;
-export type UpdateBusinessBodyDto = z.infer<typeof updateBusinessBodySchema>;
+export class CreateApplicantDto extends createZodDto(applicantDtoSchema) {}
+export class CreateBusinessDto extends createZodDto(businessDtoSchema) {}
+export class UpdateApplicantBodyDto extends createZodDto(updateApplicantBodySchema) {}
+export class UpdateBusinessBodyDto extends createZodDto(updateBusinessBodySchema) {}
