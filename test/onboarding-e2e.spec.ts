@@ -333,4 +333,59 @@ describe('Merchant Onboarding System (E2E Integration & Reliability)', () => {
       expect(duration).toBeLessThan(5000);
     });
   });
+
+  describe('5. Document Boundary Validation', () => {
+    const validApplicationId = '550e8400-e29b-41d4-a716-446655440000';
+    const validDocumentId = '6ba7b810-9dad-41d1-80b4-00c04fd430c8';
+
+    it('POST /applications/:id/documents/presign returns 400 when documentType is missing', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/applications/${validApplicationId}/documents/presign`)
+        .send({
+          mimeType: 'application/pdf',
+          fileSizeBytes: 2048,
+        })
+        .expect(400);
+
+      expect(response.body.message).toBe('Validation failed');
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'documentType',
+            message: expect.any(String),
+          }),
+        ]),
+      );
+    });
+
+    it('POST /applications/:id/documents/:documentId/complete returns 400 for a malformed checksum', async () => {
+      const response = await request(app.getHttpServer())
+        .post(
+          `/applications/${validApplicationId}/documents/${validDocumentId}/complete`,
+        )
+        .send({ checksum: 'not-64-hex-chars' })
+        .expect(400);
+
+      expect(response.body.message).toBe('Validation failed');
+      expect(response.body.errors).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: expect.stringMatching(/checksum|sha256Checksum|root/),
+            message: expect.any(String),
+          }),
+        ]),
+      );
+    });
+
+    it('POST /applications/:id/documents/presign returns 400 for a non-UUID application id', async () => {
+      await request(app.getHttpServer())
+        .post('/applications/not-a-uuid/documents/presign')
+        .send({
+          documentType: 'BANK_EVIDENCE',
+          mimeType: 'application/pdf',
+          fileSizeBytes: 2048,
+        })
+        .expect(400);
+    });
+  });
 });

@@ -4,23 +4,18 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { DocumentType } from '../../common/schemas';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import {
+  completeUploadRequestSchema,
+  presignRequestSchema,
+  type CompleteUploadRequest,
+  type PresignRequest,
+} from '../../common/schemas';
 import { DocumentService } from './document.service';
-
-class PresignedUrlDto {
-  documentType: DocumentType;
-  mimeType: string;
-  fileSizeBytes: number;
-}
-
-class CompleteDocumentUploadDto {
-  checksum?: string;
-  sha256Checksum?: string;
-  uploadedAt?: string;
-}
 
 @Controller('applications/:id/documents')
 export class DocumentController {
@@ -29,8 +24,8 @@ export class DocumentController {
   @Post('presign')
   @HttpCode(HttpStatus.OK)
   async getPresignedUrl(
-    @Param('id') applicationId: string,
-    @Body() dto: PresignedUrlDto,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) applicationId: string,
+    @Body(new ZodValidationPipe(presignRequestSchema)) dto: PresignRequest,
   ) {
     return this.documentService.requestDocumentUpload(
       applicationId,
@@ -43,8 +38,8 @@ export class DocumentController {
   @Post('presigned-url')
   @HttpCode(HttpStatus.OK)
   async getPresignedUrlLegacy(
-    @Param('id') applicationId: string,
-    @Body() dto: PresignedUrlDto,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) applicationId: string,
+    @Body(new ZodValidationPipe(presignRequestSchema)) dto: PresignRequest,
   ) {
     return this.getPresignedUrl(applicationId, dto);
   }
@@ -54,9 +49,10 @@ export class DocumentController {
   @ApiOperation({ summary: 'Confirm document upload completion and checksum' })
   @ApiResponse({ status: 200, description: 'Document status updated to RECEIVED' })
   async completeUpload(
-    @Param('id') applicationId: string,
-    @Param('documentId') documentId: string,
-    @Body() dto: CompleteDocumentUploadDto,
+    @Param('id', new ParseUUIDPipe({ version: '4' })) applicationId: string,
+    @Param('documentId', new ParseUUIDPipe({ version: '4' })) documentId: string,
+    @Body(new ZodValidationPipe(completeUploadRequestSchema))
+    dto: CompleteUploadRequest,
   ) {
     return this.documentService.completeUpload(
       applicationId,

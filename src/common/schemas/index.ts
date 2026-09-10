@@ -25,10 +25,14 @@ export {
   documentLifecycleStatusSchema,
   documentObjectMetadataSchema,
   documentSchema,
+  presignRequestSchema,
+  completeUploadRequestSchema,
   type DocumentType,
   type DocumentLifecycleStatus,
   type DocumentObjectMetadata,
   type Document,
+  type PresignRequest,
+  type CompleteUploadRequest,
 } from './document.schema';
 
 export {

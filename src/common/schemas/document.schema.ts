@@ -63,6 +63,30 @@ export const documentSchema = z.object({
   objectMetadata: documentObjectMetadataSchema,
 });
 
+export const presignRequestSchema = z.object({
+  documentType: documentTypeSchema,
+  mimeType: z.string().trim().min(1),
+  fileSizeBytes: z.number().positive(),
+});
+export type PresignRequest = z.infer<typeof presignRequestSchema>;
+
+export const completeUploadRequestSchema = z
+  .object({
+    checksum: z
+      .string()
+      .regex(/^[a-fA-F0-9]{64}$/)
+      .optional(),
+    sha256Checksum: z
+      .string()
+      .regex(/^[a-fA-F0-9]{64}$/)
+      .optional(),
+    uploadedAt: z.string().datetime({ offset: true }).optional(),
+  })
+  .refine((data) => data.checksum || data.sha256Checksum, {
+    message: 'Either checksum or sha256Checksum is required',
+  });
+export type CompleteUploadRequest = z.infer<typeof completeUploadRequestSchema>;
+
 export type DocumentType = z.infer<typeof documentTypeSchema>;
 export type DocumentLifecycleStatus = z.infer<typeof documentLifecycleStatusSchema>;
 export type DocumentObjectMetadata = z.infer<typeof documentObjectMetadataSchema>;
